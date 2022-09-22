@@ -25,14 +25,14 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.tukaani.xz.check.None;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Point;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.marktr;
@@ -312,11 +312,20 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         MapView mapview = MainApplication.getMap().mapView;
         for (Geometry geo : geometries) {
             Way w = new Way();
+            List<Node> nodes = new ArrayList<>();
             for (Coordinate c : geo.getCoordinates()) {
                 Node n = new Node(MainJosmMagicWandPlugin.latlon2eastNorth(mapview.getLatLon(c.getX(), c.getY())));
-//                n.setKeys(new TagMap("x _ y", Double.toString(c.getX()) + "__" + Double.toString(c.getY())));
-                w.addNode(n);
-                cmds.add(new AddCommand(ds, n));
+                nodes.add(n);
+            }
+            int index = 0;
+            for (Node n : nodes) {
+                if (index == (nodes.size() - 1)) {
+                    w.addNode(nodes.get(0));
+                } else {
+                    w.addNode(n);
+                    cmds.add(new AddCommand(ds, n));
+                }
+                index++;
             }
             w.setKeys(new TagMap("magic_wand", "yes"));
             cmds.add(new AddCommand(ds, w));

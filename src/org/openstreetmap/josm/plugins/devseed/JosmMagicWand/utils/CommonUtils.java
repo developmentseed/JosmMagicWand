@@ -1,10 +1,10 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.util.GeometryCombiner;
+import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
+import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.opencv.core.*;
 
 import javax.imageio.ImageIO;
@@ -15,11 +15,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.openstreetmap.josm.tools.Logging;
 
 public class CommonUtils {
     private final GeometryFactory gf = new GeometryFactory();
+    private static final PrecisionModel INTEGER_PRECISION_MODEL = new PrecisionModel(1);
 
     public Mat BufferedImage2Mat(BufferedImage bi) {
         Mat mat = new Mat(bi.getHeight(), bi.getWidth(), CvType.CV_8UC3);
@@ -142,6 +144,13 @@ public class CommonUtils {
         return DouglasPeuckerSimplifier.simplify(g, distance);
     }
 
+    public static Geometry reduceGeometry(Geometry g) {
+        return GeometryPrecisionReducer.reduce(g, INTEGER_PRECISION_MODEL);
+    }
+
+    public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
+        return PolygonHullSimplifier.hull(g, true, vertex);
+    }
 
     public List<Geometry> contourn2Geometry(List<MatOfPoint> contours, int size, int limit_x, int limit_y) {
         Logging.info("---------- contourn2Geometry ----------");
@@ -149,6 +158,7 @@ public class CommonUtils {
         List<Coordinate> tmpCoordsAll = new ArrayList<>();
 
         for (MatOfPoint contour : contours) {
+            if (contour.height() <= 3) continue;
             try {
                 List<Coordinate> tmpCoords = new ArrayList<>();
 
@@ -159,19 +169,22 @@ public class CommonUtils {
                         tmpCoordsAll.add(c);
                     }
                 }
-                if (tmpCoords.size() < 4) continue;
-
                 // create multi
                 if (!tmpCoords.get(tmpCoords.size() - 1).equals(tmpCoords.get(0))) tmpCoords.add(tmpCoords.get(0));
+                var geometryTmp = (Geometry) gf.createPolygon(tmpCoords.toArray(new Coordinate[]{}));
 
-                Polygon tmpCoordinateSimplify18 = (Polygon) simplifyDP(gf.createPolygon(tmpCoords.toArray(new Coordinate[]{})), 1.8);
-//                Logging.info("1.8  " + contour.height() + "  " + tmpCoordinateSimplify18.getCoordinates().length);
+                geometryTmp = reduceGeometry(geometryTmp);
 
-                geometries.add(tmpCoordinateSimplify18);
+                var geometryTmpSimplify = simplifyPolygonHull(geometryTmp, 0.25);
+                geometryTmpSimplify = simplifyDP(geometryTmpSimplify, 0.2);
+                geometries.add(geometryTmpSimplify);
+
             } catch (Exception ex) {
                 Logging.error(ex);
             }
         }
+
+
         return geometries;
     }
 
@@ -210,7 +223,8 @@ public class CommonUtils {
                 }
             }
             if (isUseTmp) polygon.usePolygon();
-            newPolygons.add(newPolygon);
+
+            newPolygons.add((Polygon) simplifyPolygonHull(newPolygon, 0.95));
 
         }
         Logging.info("polygons " + polygons.size() + " newPolygons " + newPolygons.size());

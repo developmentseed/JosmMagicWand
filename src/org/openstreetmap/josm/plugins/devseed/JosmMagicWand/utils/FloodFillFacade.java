@@ -43,7 +43,7 @@ public class FloodFillFacade {
         Scalar lowerDifference = new Scalar(lowerDiff, lowerDiff, lowerDiff);
         Scalar upperDifference = new Scalar(upperDiff, upperDiff, upperDiff);
         Logging.warn("lowerDiff " + lowerDiff + " upperDiff " + upperDiff);
-        int flags = connectivity + (newMaskVal << 8) + ((range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0) | 0);
+        int flags = connectivity + (newMaskVal << 8) + (range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0);
         //Imgproc.FLOODFILL_MASK_ONLY);
         int area = 0;
         area = Imgproc.floodFill(image, mask, seedPoint, newVal, rect, lowerDifference, upperDifference, flags);

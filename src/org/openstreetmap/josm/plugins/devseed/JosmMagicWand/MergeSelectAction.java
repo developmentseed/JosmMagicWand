@@ -77,14 +77,27 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         Collection<Command> cmds = new LinkedList<>();
         for (Polygon pol : polygonsMerge) {
             Way w = new Way();
+
+            List<Node> nodes = new ArrayList<>();
             for (Coordinate c : pol.getCoordinates()) {
                 Node n = new Node(new LatLon(c.getX(), c.getY()));
-                w.addNode(n);
-                cmds.add(new AddCommand(ds, n));
+                nodes.add(n);
             }
-            w.setKeys(new TagMap("merge", "yes"));
+
+            int index = 0;
+            for (Node n : nodes) {
+                if (index == (nodes.size() - 1)) {
+                    w.addNode(nodes.get(0));
+                } else {
+                    w.addNode(n);
+                    cmds.add(new AddCommand(ds, n));
+                }
+                index++;
+            }
+            w.setKeys(new TagMap("magic_wand_merge", "yes"));
             cmds.add(new AddCommand(ds, w));
             hasDraw = true;
+
         }
 
         UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
@@ -102,7 +115,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         }
 
         Logging.error("need needUnglue: " + needUnglue);
-        
+
         List<Long> nodesId = new ArrayList<>();
         for (Way w : selWays) {
             try {
