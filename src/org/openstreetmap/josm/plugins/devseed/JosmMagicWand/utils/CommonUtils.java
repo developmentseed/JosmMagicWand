@@ -191,4 +191,30 @@ public class CommonUtils {
         return image_tmp;
     }
 
+
+    public List<Polygon> mergeGeometry(List<CustomPolygon> polygons) {
+        Logging.info("---------- mergeGeometry ----------");
+        List<Polygon> newPolygons = new ArrayList<>();
+
+        for (CustomPolygon polygon : polygons) {
+            Polygon newPolygon = (Polygon) polygon.polygon().copy();
+            boolean isUseTmp = false;
+            if (polygon.isUse()) continue;
+            for (CustomPolygon polygonSecond : polygons) {
+                if (polygonSecond.isUse()) continue;
+                if (polygon.id().equals(polygonSecond.id())) continue;
+                if (newPolygon.intersects(polygonSecond.polygon())) {
+                    newPolygon = (Polygon) newPolygon.union(polygonSecond.polygon());
+                    polygonSecond.usePolygon();
+                    isUseTmp = true;
+                }
+            }
+            if (isUseTmp) polygon.usePolygon();
+            newPolygons.add(newPolygon);
+
+        }
+        Logging.info("polygons " + polygons.size() + " newPolygons " + newPolygons.size());
+        return newPolygons;
+    }
+
 }

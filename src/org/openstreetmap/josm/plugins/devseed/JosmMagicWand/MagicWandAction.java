@@ -38,8 +38,7 @@ import java.util.List;
 import static org.openstreetmap.josm.tools.I18n.marktr;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-public class MagicWandAction extends MapMode implements MapViewPaintable,
-        DataSelectionListener, KeyPressReleaseListener, ModifierExListener, MouseWheelListener {
+public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPressReleaseListener, ModifierExListener, MouseWheelListener {
 
     private static final Cursor CURSOR_CUSTOM = ImageProvider.getCursor("crosshair", "magic-wand");
     private static final Cursor CURSOR_ADD = ImageProvider.getCursor("crosshair", "magic-wand-add");
@@ -104,7 +103,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable,
         map.mapView.addMouseWheelListener(this);
         map.keyDetector.addKeyListener(this);
         map.keyDetector.addModifierExListener(this);
-        SelectionEventManager.getInstance().addSelectionListener(this);
         Config.getPref().addKeyPreferenceChangeListener("magic_wand_tool.shape", shapeChangeListener);
 
         updCursor();
@@ -121,7 +119,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable,
         map.mapView.removeMouseWheelListener(this);
         map.keyDetector.removeKeyListener(this);
         map.keyDetector.removeModifierExListener(this);
-        SelectionEventManager.getInstance().removeSelectionListener(this);
         Config.getPref().removeKeyPreferenceChangeListener("magic_wand_tool.shape", shapeChangeListener);
         cleanMasks();
         if (mode != Mode.None) map.mapView.repaint();
@@ -271,10 +268,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable,
     private void updCursor() {
         if (!MainApplication.isDisplayingMapView()) return;
         setCursor(getCursor());
-    }
-
-    @Override
-    public void selectionChanged(SelectionChangeEvent event) {
     }
 
     @Override
