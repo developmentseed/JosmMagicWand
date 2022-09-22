@@ -31,7 +31,7 @@ repositories {
 sourceSets {
     create("libs") {
         java {
-            srcDir("src").include(listOf("boofcv/**", "org/marvinproject/**"))
+            srcDir("src").include(listOf("org/openstreetmap/**"))
         }
     }
     main {
