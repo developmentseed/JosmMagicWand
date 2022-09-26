@@ -18,7 +18,7 @@ public class FloodFillFacade {
     private boolean masked = true;
     private int range = FIXED_RANGE;
     private Random random = new Random();
-    private int connectivity = 4;
+    private int connectivity = 8;
     private int newMaskVal = 255;
     private int lowerDiff = 7;
     private int upperDiff = 10;
@@ -42,7 +42,7 @@ public class FloodFillFacade {
 
         Scalar lowerDifference = new Scalar(lowerDiff, lowerDiff, lowerDiff);
         Scalar upperDifference = new Scalar(upperDiff, upperDiff, upperDiff);
-        Logging.warn("lowerDiff " + lowerDiff + " upperDiff " + upperDiff);
+        Logging.warn("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity "+ connectivity);
         int flags = connectivity + (newMaskVal << 8) + (range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0);
         //Imgproc.FLOODFILL_MASK_ONLY);
         int area = 0;

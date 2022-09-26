@@ -17,11 +17,11 @@ import java.util.List;
 
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 import org.openstreetmap.josm.tools.Logging;
 
 public class CommonUtils {
     private final GeometryFactory gf = new GeometryFactory();
-    private static final PrecisionModel INTEGER_PRECISION_MODEL = new PrecisionModel(1);
 
     public Mat BufferedImage2Mat(BufferedImage bi) {
         Mat mat = new Mat(bi.getHeight(), bi.getWidth(), CvType.CV_8UC3);
@@ -77,36 +77,43 @@ public class CommonUtils {
     }
 
     public Mat blur(Mat input, int size) {
-        Logging.info("---------- blur ----------");
+        Logging.info("---------- blur ---------- " + size);
         Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
         Imgproc.blur(input, outputImage, new Size(size, size));
         return outputImage;
     }
 
-    public Mat gaussian(Mat input, int elementSize) {
-        Logging.info("---------- gaussian ----------");
+    public Mat gaussian(Mat input, int size) {
+        Logging.info("---------- gaussian ---------- " + size);
         Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Imgproc.GaussianBlur(input, outputImage, new Size(elementSize, elementSize), 2);
+        Imgproc.GaussianBlur(input, outputImage, new Size(size, size), 2);
         return outputImage;
     }
 
-    public Mat cany(Mat imput, int threshold) {
-        Logging.info("---------- cany ----------");
+    public Mat cany(Mat imput, int size) {
+        Logging.info("---------- cany ---------- " + size);
         Mat outputImage = new Mat(new Size(1, 1), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.Canny(imput, outputImage, threshold, threshold * 2 + 1);
+        Imgproc.Canny(imput, outputImage, size, size * 2 + 1);
         return outputImage;
     }
 
-    public Mat dilate(Mat input, int elementSize, int elementShape) {
-        Logging.info("---------- dilate ----------");
-        Mat outputImage = new Mat();
-        Mat element = getKernelFromShape(elementSize, elementShape);
-        Imgproc.dilate(input, outputImage, element);
+    public Mat dilate(Mat input, int size) {
+        Logging.info("---------- dilate ---------- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_DILATE, kernel);
+        return outputImage;
+    }
+    public Mat erode(Mat input, int size) {
+        Logging.info("---------- erode ---------- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_ERODE, kernel);
         return outputImage;
     }
 
     public Mat open(Mat input, int size) {
-        Logging.info("---------- open ----------");
+        Logging.info("---------- open ---------- " + size);
         Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
         Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
         Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_OPEN, kernel);
@@ -114,10 +121,23 @@ public class CommonUtils {
     }
 
     public Mat close(Mat input, int size) {
-        Logging.info("---------- close ----------");
+        Logging.info("---------- close ---------- " + size);
         Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
         Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
         Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_CLOSE, kernel);
+        return outputImage;
+    }
+
+    public Mat fastDenoising(Mat input, int elementSize) {
+        Mat outputImage = new Mat();
+        Photo.fastNlMeansDenoisingColored(input, outputImage, elementSize);
+        return outputImage;
+    }
+
+    public Mat median(Mat input, int size) {
+        Logging.info("---------- median ---------- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Imgproc.medianBlur(input, outputImage, size);
         return outputImage;
     }
 
@@ -126,7 +146,7 @@ public class CommonUtils {
     }
 
     public List<MatOfPoint> obtainContour(Mat input) {
-        Logging.info("---------- obtainContour ----------");
+        Logging.info("---------- obtainContour ---------- ");
         Mat cropMat = input.submat(2, input.rows(), 2, input.cols());
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchey = new Mat();
@@ -145,7 +165,7 @@ public class CommonUtils {
     }
 
     public static Geometry reduceGeometry(Geometry g) {
-        return GeometryPrecisionReducer.reduce(g, INTEGER_PRECISION_MODEL);
+        return GeometryPrecisionReducer.reduce(g, new PrecisionModel(1));
     }
 
     public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
@@ -174,9 +194,10 @@ public class CommonUtils {
                 var geometryTmp = (Geometry) gf.createPolygon(tmpCoords.toArray(new Coordinate[]{}));
 
                 geometryTmp = reduceGeometry(geometryTmp);
+                if (geometryTmp.getArea() < 5) continue;
 
-                var geometryTmpSimplify = simplifyPolygonHull(geometryTmp, 0.25);
-                geometryTmpSimplify = simplifyDP(geometryTmpSimplify, 0.2);
+                var geometryTmpSimplify = simplifyPolygonHull(geometryTmp, 0.2);
+                geometryTmpSimplify = simplifyDP(geometryTmpSimplify, 0.3);
                 geometries.add(geometryTmpSimplify);
 
             } catch (Exception ex) {
