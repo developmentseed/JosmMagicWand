@@ -11,7 +11,7 @@ import java.util.List;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MagicWandDialog extends ToggleDialog {
-    private int toleranceValue = 7;
+    private int toleranceValue = 9;
     private int maskCloseValue = 5;
     private int maskOpen = 5;
     private double simplHull = 0.2;
