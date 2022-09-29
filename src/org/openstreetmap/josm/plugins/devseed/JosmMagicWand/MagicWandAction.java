@@ -303,7 +303,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             return;
         }
         List<MatOfPoint> contourns = commonUtils.obtainContour(mat_mask);
-        List<Geometry> geometries = commonUtils.contourn2Geometry(contourns, 3, mat_mask.width(), mat_image.height());
+        List<Geometry> geometries = commonUtils.contourn2Geometry(contourns, 0.2,  1, 0.0008, 160);
         if (geometries.isEmpty()) return;
 
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
@@ -315,6 +315,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             List<Node> nodes = new ArrayList<>();
             for (Coordinate c : geo.getCoordinates()) {
                 Node n = new Node(MainJosmMagicWandPlugin.latlon2eastNorth(mapview.getLatLon(c.getX(), c.getY())));
+//                n.setKeys(new TagMap("x__y", c.getX() + "__" + c.getY()));
                 nodes.add(n);
             }
             int index = 0;

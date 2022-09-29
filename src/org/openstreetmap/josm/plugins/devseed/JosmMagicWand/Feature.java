@@ -17,12 +17,12 @@ public class Feature {
         mat_flood.setTo(new Scalar(0));
         floodFillFacade.setTolerance(ToolSettings.getTolerance());
         //
-        Mat mat_blur = commonUtils.blur(mat_image, 9);
+        Mat mat_blur = commonUtils.blur(mat_image, 7);
         floodFillFacade.fill(mat_blur, mat_flood, x, y);
         Mat mat_open = commonUtils.open(mat_flood, 3);
         Mat mat_close = commonUtils.close(mat_open, 11);
         Mat mat_erode = commonUtils.erode(mat_close, 3);
-        Mat mat_dilate = commonUtils.dilate(mat_erode, 5);
+        Mat mat_dilate = commonUtils.dilate(mat_erode, 3);
 
 
         if (mat_mask != null) {
