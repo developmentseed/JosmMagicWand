@@ -235,9 +235,9 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         Logging.info("-------- mouseDragged -----------");
         if (e.getButton() == MouseEvent.BUTTON1) return;
 
-        cleanMasks();
         processMouseEvent(e);
         updCursor();
+        cleanMasks();
         MainApplication.getMap().mapView.repaint();
     }
 

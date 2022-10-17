@@ -35,7 +35,13 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         if (!isEnabled()) return;
         final Collection<Way> selWays = getSelectedWays();
         if (selWays.isEmpty()) return;
-        List<Polygon> polygonsMerge = mergeWays(selWays);
+        List<Polygon> polygonsMerge = null;
+        try {
+            polygonsMerge = mergeWays(selWays);
+        } catch (Exception e) {
+            new Notification(tr("Incorrect geometry  ")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return;
+        }
         if (polygonsMerge.isEmpty()) {
             new Notification(tr("No have polygons merge")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
@@ -44,6 +50,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         if (hasDraw) {
             removeSelected(selWays);
         }
+
     }
 
     @Override
@@ -60,7 +67,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return getLayerManager().getEditDataSet().getSelectedWays();
     }
 
-    private List<Polygon> mergeWays(Collection<Way> ways) {
+    private List<Polygon> mergeWays(Collection<Way> ways) throws Exception {
         List<CustomPolygon> polygons = new ArrayList<>();
         for (Way w : ways) {
             CustomPolygon cp = new CustomPolygon();

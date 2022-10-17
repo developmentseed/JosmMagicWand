@@ -165,8 +165,8 @@ public class CommonUtils {
         return DouglasPeuckerSimplifier.simplify(g, distance);
     }
 
-    public Geometry reduceGeometry(Geometry g) {
-        return GeometryPrecisionReducer.reduce(g, new PrecisionModel(1));
+    public Geometry reduceGeometry(Geometry g, int scale) {
+        return GeometryPrecisionReducer.reduce(g, new PrecisionModel(scale));
     }
 
     public Geometry simplifyPolygonHull(Geometry g, double vertex) {
@@ -177,10 +177,22 @@ public class CommonUtils {
         return TopologyPreservingSimplifier.simplify(g, distance);
     }
 
+    public Geometry Coordinates2Geometry(List<Coordinate> coordinates, boolean close) throws Exception {
+        if (close) {
+            if (!coordinates.get(coordinates.size() - 1).equals(coordinates.get(0)))
+                coordinates.add(coordinates.get(0));
+            var tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
+            if (!tmpPolygon.isValid()) {
+                return tmpPolygon.buffer(0);
+            }
+            return tmpPolygon;
+        }
+        return gf.createLineString(coordinates.toArray(new Coordinate[]{}));
+    }
+
     public List<Geometry> contourn2Geometry(List<MatOfPoint> contours, double simpHull, double simpDp, double smallHoleTolerance, double chaikinAngle) {
         Logging.info("---------- contourn2Geometry ----------");
         List<Geometry> geometries = new ArrayList<>();
-        List<Coordinate> tmpCoordsAll = new ArrayList<>();
 
         for (MatOfPoint contour : contours) {
             if (contour.height() <= 3) continue;
@@ -189,19 +201,15 @@ public class CommonUtils {
 
                 for (Point p : contour.toList()) {
                     Coordinate c = new Coordinate(p.x, p.y);
-                    if (!tmpCoordsAll.contains(c)) {
-                        tmpCoords.add(c);
-                        tmpCoordsAll.add(c);
-                    }
+                    tmpCoords.add(c);
                 }
+                if (tmpCoords.size() < 5) continue;
+
                 // create multi
-                if (!tmpCoords.get(tmpCoords.size() - 1).equals(tmpCoords.get(0))) tmpCoords.add(tmpCoords.get(0));
-                var geometryTmp = (Geometry) gf.createPolygon(tmpCoords.toArray(new Coordinate[]{}));
-                geometryTmp = reduceGeometry(geometryTmp);
+                var geometryTmp = (Geometry) Coordinates2Geometry(tmpCoords, true);
 
+                geometryTmp = reduceGeometry(geometryTmp, 1);
 
-                if (geometryTmp.getArea() < 5) continue;
-                Logging.info("geometryTmp  " + geometryTmp.getCoordinates().length);
 
                 if (simpHull > 0) {
                     geometryTmp = simplifyPolygonHull(geometryTmp, simpHull);
@@ -247,7 +255,7 @@ public class CommonUtils {
     }
 
 
-    public List<Polygon> mergeGeometry(List<CustomPolygon> polygons) {
+    public List<Polygon> mergeGeometry(List<CustomPolygon> polygons)  throws Exception{
         Logging.info("---------- mergeGeometry ----------");
         List<Polygon> newPolygons = new ArrayList<>();
 
@@ -273,7 +281,7 @@ public class CommonUtils {
         return newPolygons;
     }
 
-    public Geometry chaikinAlgotihm(Geometry geometry, double maxAngle) {
+    public Geometry chaikinAlgotihm(Geometry geometry, double maxAngle) throws Exception {
         // http://graphics.cs.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html
         Coordinate[] coordinates = geometry.getCoordinates();
         if (coordinates.length == 0) return geometry;
@@ -312,18 +320,16 @@ public class CommonUtils {
 
         }
 
-        if (!tmpCoords.get(tmpCoords.size() - 1).equals(tmpCoords.get(0))) tmpCoords.add(tmpCoords.get(0));
-
-        return gf.createPolygon(tmpCoords.toArray(new Coordinate[]{}));
+        return Coordinates2Geometry(tmpCoords,true);
 
     }
 
-    public Polygon removeSmallHole(Polygon geometry, double tolerance, int nextPoints) {
+    public Polygon removeSmallHole(Polygon geometry, double tolerance, int nextPoints) throws Exception {
         List<Coordinate> tmpCoords = new ArrayList<>();
         double perimeter = Math.abs(geometry.getLength());
         if (perimeter == 0.0) return geometry;
 
-        perimeter = perimeter * tolerance;
+        var perimeterTolerance = perimeter * tolerance;
 
         int coodinatesLenght = geometry.getCoordinates().length;
         Coordinate[] coordinates = geometry.getCoordinates();
@@ -337,9 +343,9 @@ public class CommonUtils {
             }
             for (int j = 1; j < nextPoints; j++) {
                 if ((i + j) >= coodinatesLenght) continue;
-                Coordinate p1 = coordinates[i + 1];
+                Coordinate p1 = coordinates[i + j];
 
-                if (p0.distance(p1) <= perimeter) {
+                if (p0.distance(p1) <= perimeterTolerance) {
                     tmpIndex = i + j;
                 }
             }
@@ -350,8 +356,7 @@ public class CommonUtils {
             }
         }
 
-        if (!tmpCoords.get(tmpCoords.size() - 1).equals(tmpCoords.get(0))) tmpCoords.add(tmpCoords.get(0));
-        return gf.createPolygon(tmpCoords.toArray(new Coordinate[]{}));
+        return (Polygon) Coordinates2Geometry(tmpCoords,true);
     }
 
     public double mPoints(Coordinate ca, Coordinate cb) {

@@ -17,7 +17,7 @@ public class CustomPolygon {
     private boolean isUse;
     private Way way;
     private final GeometryFactory gf = new GeometryFactory();
-
+    private CommonUtils commonUtils = new CommonUtils();
     public CustomPolygon() {
         this.id = UUID.randomUUID().toString();
         this.isUse = false;
@@ -30,8 +30,7 @@ public class CustomPolygon {
             for (Node n : w.getNodes()) {
                 tmpCords.add(new Coordinate(n.lat(), n.lon()));
             }
-            if (!tmpCords.get(tmpCords.size() - 1).equals(tmpCords.get(0))) tmpCords.add(tmpCords.get(0));
-            this.pol = gf.createPolygon(tmpCords.toArray(new Coordinate[]{}));
+            this.pol = (Polygon) commonUtils.Coordinates2Geometry(tmpCords, true);
         } catch (Exception ex) {
             Logging.error(ex);
         }
