@@ -1,7 +1,6 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -16,8 +15,6 @@ public class CustomPolygon {
     private String id;
     private boolean isUse;
     private Way way;
-    private final GeometryFactory gf = new GeometryFactory();
-    private CommonUtils commonUtils = new CommonUtils();
     public CustomPolygon() {
         this.id = UUID.randomUUID().toString();
         this.isUse = false;
@@ -30,7 +27,7 @@ public class CustomPolygon {
             for (Node n : w.getNodes()) {
                 tmpCords.add(new Coordinate(n.lat(), n.lon()));
             }
-            this.pol = (Polygon) commonUtils.Coordinates2Geometry(tmpCords, true);
+            this.pol = (Polygon) CommonUtils.Coordinates2Geometry(tmpCords, true);
         } catch (Exception ex) {
             Logging.error(ex);
         }

@@ -8,7 +8,6 @@ import org.openstreetmap.josm.command.*;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.osm.*;
-import org.openstreetmap.josm.data.osm.event.SelectionEventManager;
 import org.openstreetmap.josm.data.preferences.NamedColorProperty;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
@@ -25,7 +24,6 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
-import org.tukaani.xz.check.None;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,8 +48,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     }
 
 
-    private final Feature feature = new Feature();
-    private final CommonUtils commonUtils = new CommonUtils();
 
     private Mode mode = Mode.None;
     private Mode nextMode = Mode.None;
@@ -197,8 +193,8 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     public void paint(Graphics2D g, MapView mv, Bounds bbox) {
         if (mat_mask != null && mat_image != null) {
             try {
-                Mat new_mask = commonUtils.maskInsideImage(mat_image, mat_mask, 0.45);
-                BufferedImage bi_mask = commonUtils.toBufferedImage(new_mask);
+                Mat new_mask = CommonUtils.maskInsideImage(mat_image, mat_mask, 0.45);
+                BufferedImage bi_mask = CommonUtils.toBufferedImage(new_mask);
                 g.drawImage(bi_mask, 0, 0, null);
             } catch (Exception e) {
                 Logging.error(e);
@@ -257,11 +253,11 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private void drawingFinish(MouseEvent e) throws Exception {
 
         if (mat_image == null) {
-            mat_image = commonUtils.BufferedImage2Mat(getLayeredImage());
+            mat_image = CommonUtils.BufferedImage2Mat(getLayeredImage());
         }
 
         Logging.info("-------- drawingFinish -----------");
-        mat_mask = feature.processImageRaster(mat_image, mat_mask, ctrl, shift, e.getX(), e.getY());
+        mat_mask = CommonUtils.processImage(mat_image, mat_mask, ctrl, shift, e.getX(), e.getY());
         MainApplication.getMap().repaint();
     }
 
@@ -302,8 +298,8 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             new Notification(tr("Mask  empty, select again")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        List<MatOfPoint> contourns = commonUtils.obtainContour(mat_mask);
-        List<Geometry> geometries = commonUtils.contourn2Geometry(contourns, 0.2,  1, 0.0008, 160);
+        List<MatOfPoint> contourns = CommonUtils.obtainContour(mat_mask);
+        List<Geometry> geometries = CommonUtils.contourn2Geometry(contourns, 0.2,  1, 0.0008, 150);
         if (geometries.isEmpty()) return;
 
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();

@@ -11,17 +11,15 @@ import org.openstreetmap.josm.tools.Logging;
 
 public class FloodFillFacade {
 
-    public static final int NULL_RANGE = 0;
     public static final int FIXED_RANGE = 1;
-    public static final int FLOATING_RANGE = 2;
     private boolean colored = true;
     private boolean masked = true;
     private int range = FIXED_RANGE;
     private Random random = new Random();
     private int connectivity = 8;
-    private int newMaskVal = 255;
+    private final int newMaskVal = 255;
     private int lowerDiff = 7;
-    private int upperDiff = 10;
+    private int upperDiff = 9;
 
 
     @Override
@@ -102,6 +100,6 @@ public class FloodFillFacade {
 
     public void setTolerance(int tolerance) {
         this.lowerDiff = tolerance;
-        this.upperDiff = tolerance + 3;
+        this.upperDiff = tolerance + 2;
     }
 }
