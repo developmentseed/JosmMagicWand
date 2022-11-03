@@ -49,9 +49,9 @@ val libsImplementation: Configuration by configurations.getting {
 
 dependencies {
     packIntoJar("org.locationtech.jts:jts-core:1.19.0")
-    packIntoJar("org.openpnp:opencv:4.5.1-2")
+    packIntoJar("org.openpnp:opencv:4.5.5-1")
     libsImplementation("org.locationtech.jts:jts-core:1.19.0")
-    libsImplementation("org.openpnp:opencv:4.5.1-2")
+    libsImplementation("org.openpnp:opencv:4.5.5-1")
 }
 
 
