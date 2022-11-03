@@ -15,6 +15,11 @@ public class CustomPolygon {
     private String id;
     private boolean isUse;
     private Way way;
+
+    @Override
+    public String toString() {
+        return "CustomPolygon [id=" + id + ", isUse=" + isUse +"]";
+    }
     public CustomPolygon() {
         this.id = UUID.randomUUID().toString();
         this.isUse = false;

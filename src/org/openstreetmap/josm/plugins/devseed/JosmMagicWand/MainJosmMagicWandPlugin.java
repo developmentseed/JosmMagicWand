@@ -17,7 +17,6 @@ import org.opencv.core.Core;
 import javax.swing.*;
 
 public class MainJosmMagicWandPlugin extends Plugin {
-    public static final String NAME = "MagicWand";
     MagicWandDialog magicWandDialog = new MagicWandDialog();
 
     public static final Projection MERCATOR = Projections.getProjectionByCode("EPSG:3857"); // Mercator

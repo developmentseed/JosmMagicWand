@@ -149,7 +149,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             if (mode != Mode.None) e.consume();
             cancelDrawing();
         }
-        if (e.getKeyCode() == KeyEvent.VK_2 && ctrl) {
+        if ((e.getKeyCode() == KeyEvent.VK_2) && ctrl) {
             try {
                 drawContours();
             } catch (Exception ex) {
