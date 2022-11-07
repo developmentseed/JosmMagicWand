@@ -63,10 +63,11 @@ josm {
         description = "JOSM plugin for select areas by color range."
         mainClass = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin"
         minJosmVersion = "18193"
-        author = "Junior flores"
+        author = "yunica"
         canLoadAtRuntime = true
         iconPath = "images/dialogs/magicwand.svg"
         website = URL("https://github.com/developmentseed/JosmMagicWand")
+        minJavaVersion = 11
     }
 
 }
