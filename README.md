@@ -5,9 +5,21 @@ colors, it is also possible to add areas and subtract selected areas.
 
 ![Peek 2022-09-22 16-27](https://user-images.githubusercontent.com/12978932/191855039-685b9420-0e55-4883-a466-4ff85d860bac.gif)
 
+## Installation
+
+1. Search the plugin ( magic wand).
+   ![image](https://user-images.githubusercontent.com/12978932/200428835-a652ef65-f895-4acd-a19a-bef3e7a8175a.png)
+
+2. Wait to download the plugin, sometimes it takes a few minutes, because the plugin is 100 MB in size.
+   ![image](https://user-images.githubusercontent.com/12978932/200429273-ce2e2d4d-8839-46ce-ba47-a620e3984b17.png)
+
+3. Confirmation window.
+   ![image](https://user-images.githubusercontent.com/12978932/200429366-c8566cb9-d842-4efe-b810-151b68f86fc3.png)
+   ![image](https://user-images.githubusercontent.com/12978932/200431510-a414f03f-c285-4217-adf0-d9d91d41d47f.png)
+
 ## Usage
 
-Josm Magic Wand plugin It has two modes of execution: generate and merge geometries.
+Josm Magic Wand plugin it has two modes of execution: **generate** and **merge** geometries.
 
 ### Generate geometries.
 
@@ -45,3 +57,25 @@ this functionality allows you to merge several geometries into one, the geometri
 1. Select mode.
 2. Open window.
 3. Adjust the tolerance of magic wand. 
+
+## Use cases
+### Cases where it works well
+
+| Image                                                                                                            | Description                                            |
+|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| ![image](https://user-images.githubusercontent.com/12978932/200626354-cfe0ab0b-5490-4abf-9e0d-0e30bf57abf7.png)  | the edge of the lake has borders marked with the path  |
+| ![image](https://user-images.githubusercontent.com/12978932/200627390-ddd26531-cfe7-47c8-bf16-8e7a64ce3f60.png)  | the edge of the lake and the farm have marked borders  |
+| ![image](https://user-images.githubusercontent.com/12978932/200627737-04ec310a-2499-4a2d-8b33-c112e6926cdf.png)  |uniform color and sharp edges (contrast)                 |
+| ![image](https://user-images.githubusercontent.com/12978932/200628149-7e536725-369b-42aa-8309-d7cd37a73baa.png)  | uniform color and sharp edges (contrast)               |
+| ![image](https://user-images.githubusercontent.com/12978932/200628412-756285de-581f-4369-8e81-f94c8f2f6da5.png)  | uniform color and sharp edges (contrast)               |
+| ![image](https://user-images.githubusercontent.com/12978932/200628944-2c2143ec-a7e0-4b87-a507-41ad069e4d39.png)  | uniform color and sharp edges (contrast)               |
+
+
+
+### cases where it doesn't work well
+
+| Image                                                                                                            | Description                                                                  |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| ![image](https://user-images.githubusercontent.com/12978932/200629118-48fa92ef-60a3-4d8a-b807-917c9dd95b8c.png)  | the two farms are separated by a very thin path of similar color             |
+| ![image](https://user-images.githubusercontent.com/12978932/200629404-9b9a48f5-4c9d-483e-9f8d-1a7499f51659.png)  | parts of the farm and the border have similar colors with the rest           |
+| ![image](https://user-images.githubusercontent.com/12978932/200644356-09bbca8e-833c-49f8-9427-cb2c4de7a223.png)  | the borders of the farm with the road and the other farm have similar colors |
