@@ -14,7 +14,9 @@ import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
@@ -328,6 +330,17 @@ public class CommonUtils {
         return Math.atan((mbc - mab) / (1 + (mbc * mab)));
     }
 
+    public static List<Geometry> filterByArea(List<Geometry> geometries, double tolerance) {
+        double areaMAx = 0;
+        for (Geometry geom : geometries) {
+            if (geom.getArea() >= areaMAx) {
+                areaMAx = geom.getArea();
+            }
+        }
+        double areaTolerance = areaMAx * tolerance;
+        return geometries.stream().filter(x -> x.getArea() >= areaTolerance).collect(Collectors.toList());
+    }
+
     public static Mat processImage(Mat mat_image, Mat mat_mask, boolean ctrl_, boolean shift_, int x, int y) throws Exception {
         FloodFillFacade floodFillFacade = new FloodFillFacade();
         Mat mat_flood = new Mat();
@@ -366,6 +379,7 @@ public class CommonUtils {
 
         return mat_dilate.clone();
     }
+
     public static List<Geometry> contourn2Geometry(List<MatOfPoint> contours, double simpHull, double simpDp, double smallHoleTolerance, double chaikinAngle) {
         Logging.info("---------- contourn2Geometry ----------");
         List<Geometry> geometries = new ArrayList<>();
@@ -411,7 +425,7 @@ public class CommonUtils {
         }
 
 
-        return geometries;
+        return filterByArea(geometries,0.1);
     }
 
 
