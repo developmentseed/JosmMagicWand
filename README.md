@@ -61,14 +61,14 @@ this functionality allows you to merge several geometries into one, the geometri
 ## Use cases
 ### Cases where it works well
 
-| Image                                                                                                            | Description                                            |
-|------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
-| ![image](https://user-images.githubusercontent.com/12978932/200626354-cfe0ab0b-5490-4abf-9e0d-0e30bf57abf7.png)  | the edge of the lake has borders marked with the path  |
-| ![image](https://user-images.githubusercontent.com/12978932/200627390-ddd26531-cfe7-47c8-bf16-8e7a64ce3f60.png)  | the edge of the lake and the farm have marked borders  |
-| ![image](https://user-images.githubusercontent.com/12978932/200627737-04ec310a-2499-4a2d-8b33-c112e6926cdf.png)  |uniform color and sharp edges (contrast)                 |
-| ![image](https://user-images.githubusercontent.com/12978932/200628149-7e536725-369b-42aa-8309-d7cd37a73baa.png)  | uniform color and sharp edges (contrast)               |
-| ![image](https://user-images.githubusercontent.com/12978932/200628412-756285de-581f-4369-8e81-f94c8f2f6da5.png)  | uniform color and sharp edges (contrast)               |
-| ![image](https://user-images.githubusercontent.com/12978932/200628944-2c2143ec-a7e0-4b87-a507-41ad069e4d39.png)  | uniform color and sharp edges (contrast)               |
+| Image                                                                                                            | Description                                           |
+|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| ![image](https://user-images.githubusercontent.com/12978932/200626354-cfe0ab0b-5490-4abf-9e0d-0e30bf57abf7.png)  | the edge of the lake has borders marked with the path |
+| ![image](https://user-images.githubusercontent.com/12978932/200627390-ddd26531-cfe7-47c8-bf16-8e7a64ce3f60.png)  | the edge of the lake and the farm have marked borders |
+| ![image](https://user-images.githubusercontent.com/12978932/200627737-04ec310a-2499-4a2d-8b33-c112e6926cdf.png)  | uniform color and sharp edges (contrast)              |
+| ![image](https://user-images.githubusercontent.com/12978932/200628149-7e536725-369b-42aa-8309-d7cd37a73baa.png)  | uniform color and sharp edges (contrast)              |
+| ![image](https://user-images.githubusercontent.com/12978932/200628412-756285de-581f-4369-8e81-f94c8f2f6da5.png)  | uniform color and sharp edges (contrast)              |
+| ![image](https://user-images.githubusercontent.com/12978932/200628944-2c2143ec-a7e0-4b87-a507-41ad069e4d39.png)  | uniform color and sharp edges (contrast)              |
 
 
 

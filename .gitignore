@@ -41,3 +41,6 @@ bin/
 
 ### Other ###
 osmjar/
+
+### Exclude ###
+!build/dist/josm_magic_wand.jar
