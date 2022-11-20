@@ -50,7 +50,7 @@ This functionality allows you to merge several geometries into one, the geometri
 
 ## Requirements
 
-- Java JDK 11.
+- Java JDK 11+.
 - JOSM 18193 or higher.
 
 ## Extra options

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand"
-version = "1.0-SNAPSHOT"
+version = "1.1"
 
 java {
     toolchain {
