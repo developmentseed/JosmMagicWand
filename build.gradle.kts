@@ -5,7 +5,6 @@ plugins {
     id("org.openstreetmap.josm") version "0.8.0"
     id("java")
     id("java-library")
-
 }
 
 group = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand"
@@ -49,16 +48,16 @@ val libsImplementation: Configuration by configurations.getting {
 
 dependencies {
     packIntoJar("org.locationtech.jts:jts-core:1.19.0")
-    packIntoJar("org.openpnp:opencv:4.5.5-1")
+    packIntoJar("org.openpnp:opencv:4.7.0-0")
     libsImplementation("org.locationtech.jts:jts-core:1.19.0")
-    libsImplementation("org.openpnp:opencv:4.5.5-1")
+    libsImplementation("org.openpnp:opencv:4.7.0-0")
 }
 
 
 josm {
     pluginName = "josm_magic_wand"
     debugPort = 1729
-    josmCompileVersion = "18193"
+    josmCompileVersion = "18700"
     manifest {
         description = "JOSM plugin for select areas by color range."
         mainClass = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin"
