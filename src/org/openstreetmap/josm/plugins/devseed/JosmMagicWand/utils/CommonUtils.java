@@ -232,7 +232,7 @@ public class CommonUtils {
             }
             if (isUseTmp) polygon.usePolygon();
 
-            newPolygons.add((Polygon) simplifyPolygonHull(newPolygon, 0.8));
+            newPolygons.add((Polygon) simplifyPolygonHull(newPolygon, 0.99));
 
         }
         Logging.info("polygons " + polygons.size() + " newPolygons " + newPolygons.size());

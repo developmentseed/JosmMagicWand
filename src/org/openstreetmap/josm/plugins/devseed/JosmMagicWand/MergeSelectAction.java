@@ -1,15 +1,12 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.util.*;
-
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
 import org.openstreetmap.josm.actions.JosmAction;
-import org.openstreetmap.josm.command.*;
+import org.openstreetmap.josm.command.AddCommand;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.command.DeleteCommand;
+import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.*;
@@ -21,6 +18,14 @@ import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MergeSelectAction extends JosmAction implements DataSelectionListener {
     private final CommonUtils commonUtils = new CommonUtils();
@@ -34,19 +39,23 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
     public void actionPerformed(ActionEvent actionEvent) {
         if (!isEnabled()) return;
         final Collection<Way> selWays = getSelectedWays();
-        if (selWays.isEmpty()) return;
-        List<Polygon> polygonsMerge = null;
+        if (selWays.isEmpty()) {
+            new Notification(tr("No ways selected.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return;
+        }
+        ;
+        List<Polygon> polygonsMerge = new ArrayList<>();
         try {
             polygonsMerge = mergeWays(selWays);
         } catch (Exception e) {
-            new Notification(tr("Incorrect geometry  ")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            new Notification(tr("Incorrect geometry.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
         if (polygonsMerge.isEmpty()) {
-            new Notification(tr("No have polygons merge")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            new Notification(tr("Does not have merged ways.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        boolean hasDraw = isdrawWays(polygonsMerge);
+        boolean hasDraw = drawWays(polygonsMerge);
         if (hasDraw) {
             removeSelected(selWays);
         }
@@ -77,7 +86,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return commonUtils.mergeGeometry(polygons);
     }
 
-    private boolean isdrawWays(List<Polygon> polygonsMerge) {
+    private boolean drawWays(List<Polygon> polygonsMerge) {
         boolean hasDraw = false;
         if (polygonsMerge.isEmpty()) return hasDraw;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
@@ -111,25 +120,21 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return hasDraw;
     }
 
-    private void removeSelected(Collection<Way> selWays) {
+    private void removeSelected(Collection<Way> selectedWays) {
         Collection<Command> cmds = new LinkedList<>();
-        boolean needUnglue = false;
 
-        for (Way w : selWays) {
-            for (Node node : w.getNodes()) {
-                if (node.getParentWays().size() > 1) needUnglue = true;
-            }
-        }
-
-        Logging.error("need needUnglue: " + needUnglue);
-
-        List<Long> nodesId = new ArrayList<>();
-        for (Way w : selWays) {
+        List<Long> nodesIdRemove = new ArrayList<>();
+        for (Way w : selectedWays) {
             try {
                 List<Node> nodesRemoveTmp = new ArrayList<>();
                 for (Node node : w.getNodes()) {
-                    if (!nodesId.contains(node.getUniqueId())) {
-                        nodesId.add(node.getUniqueId());
+                    // node its in a way no selectes
+                    boolean nodeCanRemove = true;
+                    if (node.getParentWays().size() > 1) {
+                        nodeCanRemove = selectedWays.containsAll(node.getParentWays());
+                    }
+                    if (!nodesIdRemove.contains(node.getUniqueId()) && nodeCanRemove) {
+                        nodesIdRemove.add(node.getUniqueId());
                         nodesRemoveTmp.add(node);
                     }
                 }
