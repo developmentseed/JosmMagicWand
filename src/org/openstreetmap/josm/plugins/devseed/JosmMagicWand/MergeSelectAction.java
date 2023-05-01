@@ -5,16 +5,15 @@ import org.locationtech.jts.geom.Polygon;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
-import org.openstreetmap.josm.command.DeleteCommand;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.*;
 import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CustomPolygon;
-import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import javax.swing.*;
@@ -43,7 +42,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
             new Notification(tr("No ways selected.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        ;
+
         List<Polygon> polygonsMerge = new ArrayList<>();
         try {
             polygonsMerge = mergeWays(selWays);
@@ -57,7 +56,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         }
         boolean hasDraw = drawWays(polygonsMerge);
         if (hasDraw) {
-            removeSelected(selWays);
+            removeSelected(actionEvent);
         }
 
     }
@@ -120,32 +119,11 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return hasDraw;
     }
 
-    private void removeSelected(Collection<Way> selectedWays) {
-        Collection<Command> cmds = new LinkedList<>();
-
-        List<Long> nodesIdRemove = new ArrayList<>();
-        for (Way w : selectedWays) {
-            try {
-                List<Node> nodesRemoveTmp = new ArrayList<>();
-                for (Node node : w.getNodes()) {
-                    // node its in a way no selectes
-                    boolean nodeCanRemove = true;
-                    if (node.getParentWays().size() > 1) {
-                        nodeCanRemove = selectedWays.containsAll(node.getParentWays());
-                    }
-                    if (!nodesIdRemove.contains(node.getUniqueId()) && nodeCanRemove) {
-                        nodesIdRemove.add(node.getUniqueId());
-                        nodesRemoveTmp.add(node);
-                    }
-                }
-                cmds.add(new DeleteCommand(w));
-                cmds.add(new DeleteCommand(nodesRemoveTmp));
-            } catch (Exception ex) {
-                Logging.error(ex);
-            }
-        }
-
-        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("remove ways"), cmds));
+    private void removeSelected(ActionEvent e) {
+        MapFrame map = MainApplication.getMap();
+        if (!isEnabled() || !map.mapView.isActiveLayerVisible())
+            return;
+        map.mapModeDelete.doActionPerformed(e);
     }
 
 }
