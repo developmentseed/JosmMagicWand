@@ -46,6 +46,7 @@ public class MainJosmMagicWandPlugin extends Plugin {
         JMenu jToolmenu = MainApplication.getMenu().toolsMenu;
         jToolmenu.addSeparator();
         MainMenu.add(jToolmenu, new MergeSelectAction());
+        MainMenu.add(jToolmenu, new SimplifySelectAction());
 
     }
 

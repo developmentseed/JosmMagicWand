@@ -253,7 +253,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private void drawingFinish(MouseEvent e) throws Exception {
 
         if (mat_image == null) {
-            mat_image = CommonUtils.BufferedImage2Mat(getLayeredImage());
+            mat_image = CommonUtils.bufferedImage2Mat(getLayeredImage());
         }
 
         Logging.info("-------- drawingFinish -----------");
@@ -299,7 +299,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             return;
         }
         List<MatOfPoint> contourns = CommonUtils.obtainContour(mat_mask);
-        List<Geometry> geometries = CommonUtils.contourn2Geometry(contourns, 0.2,  1, 0.0008, 150);
+        List<Geometry> geometries = CommonUtils.contourn2Geometry(contourns, ToolSettings.getSimplPolygonHull(),  ToolSettings.getSimplifyDouglasP(), 0,0);
         if (geometries.isEmpty()) return;
 
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();

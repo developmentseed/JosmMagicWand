@@ -7,9 +7,12 @@ public final class ToolSettings {
     private static int tolerance;
     private static int maskClose;
     private static int maskMedian;
-    private static double simplHull;
-    private static double simplPerMor;
-    private static double simplDP;
+    private static int maskOpen;
+
+    // simplify
+    private static double simplDouglasP;
+    private static double simplPolygonHull;
+    private static double simplTopologyPreserving;
 
     public static int getMaskOpen() {
         return maskOpen;
@@ -19,7 +22,6 @@ public final class ToolSettings {
         ToolSettings.maskOpen = maskOpen;
     }
 
-    private static int maskOpen;
 
     public static int getTolerance() {
         return tolerance;
@@ -45,26 +47,27 @@ public final class ToolSettings {
         ToolSettings.maskMedian = maskMedian;
     }
 
-    public static double getSimplHull() {
-        return simplHull;
+    public static double getSimplPolygonHull() {
+        return simplPolygonHull;
     }
 
-    public static void setSimplHull(double simplHull) {
-        ToolSettings.simplHull = simplHull;
+    public static void setSimplPolygonHull(double simplPolygonHull) {
+        ToolSettings.simplPolygonHull = simplPolygonHull;
     }
 
-    public static double getSimplPerMor() {
-        return simplPerMor;
+    public static double getSimplTopologyPreserving() {
+        return simplTopologyPreserving;
     }
 
-    public static void setSimplPerMor(double simplPerMor) {
-        ToolSettings.simplPerMor = simplPerMor;
-    }
-    public static double getSimplDP() {
-        return simplDP;
+    public static void setSimplTopologyPreserving(double simplTopologyPreserving) {
+        ToolSettings.simplTopologyPreserving = simplTopologyPreserving;
     }
 
-    public static void setSimplDP(double simplDP) {
-        ToolSettings.simplDP = simplDP;
+    public static double getSimplifyDouglasP() {
+        return simplDouglasP;
+    }
+
+    public static void setSimplifyDouglasP(double simplDouglasP) {
+        ToolSettings.simplDouglasP = simplDouglasP;
     }
 }
