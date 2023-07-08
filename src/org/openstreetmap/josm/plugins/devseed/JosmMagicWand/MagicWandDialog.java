@@ -120,7 +120,7 @@ public class MagicWandDialog extends ToggleDialog {
         ToolSettings.setSimplifyDouglasP(simplDouglaspValue / decimalPlaces);
         jpanel.add(simplDouglaspJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (0.3 * decimalPlaces), simplDouglaspValue);
+        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), simplDouglaspValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -147,7 +147,7 @@ public class MagicWandDialog extends ToggleDialog {
         ToolSettings.setSimplTopologyPreserving(simplTopologyPreservingValue / decimalPlaces);
         jpanel.add(simplTopologyPreservingJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (0.3 * decimalPlaces), simplTopologyPreservingValue);
+        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), simplTopologyPreservingValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
