@@ -1,37 +1,40 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
-import org.opencv.core.*;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
-import org.openstreetmap.josm.command.*;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.UndoRedoHandler;
-import org.openstreetmap.josm.data.osm.*;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.preferences.NamedColorProperty;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable;
 import org.openstreetmap.josm.gui.util.KeyPressReleaseListener;
 import org.openstreetmap.josm.gui.util.ModifierExListener;
-
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.spi.preferences.PreferenceChangedListener;
-import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Point;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.openstreetmap.josm.tools.I18n.marktr;
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -46,8 +49,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private enum Mode {
         None, Drawing
     }
-
-
 
     private Mode mode = Mode.None;
     private Mode nextMode = Mode.None;
@@ -152,8 +153,11 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         if ((e.getKeyCode() == KeyEvent.VK_2) && ctrl) {
             try {
                 drawContours();
+                new Notification(tr("Mapping completed successfully.")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             } catch (Exception ex) {
                 Logging.error(ex);
+                cleanMasks();
+                new Notification(tr(ex.getMessage())).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             }
         }
     }
@@ -162,25 +166,20 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     public void doKeyReleased(KeyEvent e) {
     }
 
-    private Mode modeDrawing() {
-        return Mode.Drawing;
-    }
-
-
     private void processMouseEvent(MouseEvent e) {
         if (e != null) {
             mousePos = e.getPoint();
             updateKeyModifiers(e);
+
         }
         if (mode == Mode.None) {
             nextMode = Mode.None;
             return;
         }
-
-        if (mode == Mode.Drawing) {
-            nextMode = modeDrawing();
+        if (mode != Mode.Drawing) {
+            new Notification(tr("Invalid drawing mode.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         } else {
-            throw new AssertionError("Invalid drawing mode");
+            nextMode = Mode.Drawing;
         }
     }
 
@@ -298,37 +297,16 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             new Notification(tr("Mask  empty, select again")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        List<MatOfPoint> contourns = CommonUtils.obtainContour(mat_mask);
-        List<Geometry> geometries = CommonUtils.contourn2Geometry(contourns, ToolSettings.getSimplPolygonHull(),  ToolSettings.getSimplifyDouglasP(), 0,0);
-        if (geometries.isEmpty()) return;
-
-        DataSet ds = MainApplication.getLayerManager().getEditDataSet();
-
-        Collection<Command> cmds = new LinkedList<>();
         MapView mapview = MainApplication.getMap().mapView;
-        for (Geometry geo : geometries) {
-            Way w = new Way();
-            List<Node> nodes = new ArrayList<>();
-            for (Coordinate c : geo.getCoordinates()) {
-                Node n = new Node(MainJosmMagicWandPlugin.latlon2eastNorth(mapview.getLatLon(c.getX(), c.getY())));
-//                n.setKeys(new TagMap("x__y", c.getX() + "__" + c.getY()));
-                nodes.add(n);
-            }
-            int index = 0;
-            for (Node n : nodes) {
-                if (index == (nodes.size() - 1)) {
-                    w.addNode(nodes.get(0));
-                } else {
-                    w.addNode(n);
-                    cmds.add(new AddCommand(ds, n));
-                }
-                index++;
-            }
-            w.setKeys(new TagMap("magic_wand", "yes"));
-            cmds.add(new AddCommand(ds, w));
-        }
-
-        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw contours"), cmds));
+        List<MatOfPoint> contourns = CommonUtils.obtainContour(mat_mask);
+        List<Geometry> geometries = CommonUtils.contourn2Geometry(contourns, mapview);
+        if (geometries.isEmpty()) return;
+        DataSet ds = MainApplication.getLayerManager().getEditDataSet();
+        // simplify
+        List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifyGeometry).collect(Collectors.toList());
+        // smooth
+        Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesSimplify, "magic_wand", "yes");
+        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
         cleanMasks();
         mapview.repaint();
     }

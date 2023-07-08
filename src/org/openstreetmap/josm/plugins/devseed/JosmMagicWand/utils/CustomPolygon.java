@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public class CustomPolygon {
     private Polygon pol;
-    private String id;
+    private final String id;
     private boolean isUse;
     private Way way;
 

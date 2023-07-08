@@ -1,19 +1,20 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Geometry;
 import org.openstreetmap.josm.actions.JosmAction;
-import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.*;
+import org.openstreetmap.josm.data.osm.DataSelectionListener;
+import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CustomPolygon;
+import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import javax.swing.*;
@@ -21,7 +22,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -42,18 +42,18 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
             return;
         }
 
-        List<Polygon> polygonsMerge = new ArrayList<>();
+        List<Geometry> geometryMerge;
         try {
-            polygonsMerge = mergeWays(selWays);
+            geometryMerge = mergeWays(selWays);
         } catch (Exception e) {
             new Notification(tr("Incorrect geometry.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        if (polygonsMerge.isEmpty()) {
+        if (geometryMerge.isEmpty()) {
             new Notification(tr("Does not have merged ways.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        boolean hasDraw = drawWays(polygonsMerge);
+        boolean hasDraw = drawWays(geometryMerge);
         if (hasDraw) {
             removeSelected(actionEvent);
         }
@@ -74,7 +74,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return getLayerManager().getEditDataSet().getSelectedWays();
     }
 
-    private List<Polygon> mergeWays(Collection<Way> ways) throws Exception {
+    private List<Geometry> mergeWays(Collection<Way> ways) throws Exception {
         List<CustomPolygon> polygons = new ArrayList<>();
         for (Way w : ways) {
             CustomPolygon cp = new CustomPolygon();
@@ -84,38 +84,18 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return CommonUtils.mergeGeometry(polygons);
     }
 
-    private boolean drawWays(List<Polygon> polygonsMerge) {
-        boolean hasDraw = false;
-        if (polygonsMerge.isEmpty()) return hasDraw;
+    private boolean drawWays(List<Geometry> geometries) {
+        if (geometries.isEmpty()) return false;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
-        Collection<Command> cmds = new LinkedList<>();
-        for (Polygon pol : polygonsMerge) {
-            Way w = new Way();
 
-            List<Node> nodes = new ArrayList<>();
-            for (Coordinate c : pol.getCoordinates()) {
-                Node n = new Node(new LatLon(c.getX(), c.getY()));
-                nodes.add(n);
-            }
-
-            int index = 0;
-            for (Node n : nodes) {
-                if (index == (nodes.size() - 1)) {
-                    w.addNode(nodes.get(0));
-                } else {
-                    w.addNode(n);
-                    cmds.add(new AddCommand(ds, n));
-                }
-                index++;
-            }
-            w.setKeys(new TagMap("magic_wand_merge", "yes"));
-            cmds.add(new AddCommand(ds, w));
-            hasDraw = true;
-
+        try {
+            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometries, "magic_wand_merge", "yes");
+            UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
+            return !cmds.isEmpty();
+        } catch (Exception e) {
+            Logging.error(e);
+            return false;
         }
-
-        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
-        return hasDraw;
     }
 
     private void removeSelected(ActionEvent e) {

@@ -1,10 +1,9 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
-import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.gui.SideButton;
+import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 
 import javax.swing.*;
-
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -15,16 +14,15 @@ public class MagicWandDialog extends ToggleDialog {
 
     // Simplify
 
-    private int simplPolygonHullValue;
-    private int simplDouglaspValue = 10;
+    final int simplDouglaspValue = 10;
 
-    private int simplTopologyPreservingValue = 20;
+    final int simplTopologyPreservingValue = 20;
 
-    private final JLabel toleranceJLabel;
+    final JLabel toleranceJLabel;
 
-    private final JLabel simplPolygonHullJLabel;
-    private final JLabel simplTopologyPreservingJLabel;
-    private final JLabel simplDouglaspJLabel;
+    final JLabel simplPolygonHullJLabel;
+    final JLabel simplTopologyPreservingJLabel;
+    final JLabel simplDouglaspJLabel;
 
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand.svg", tr("Open MagicWand windows"), null, 90);
@@ -80,10 +78,10 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        double decimalPlaces =  Math.pow(10, 3);
-        double min = 0.8;
+        double decimalPlaces = Math.pow(10, 3);
+        double min = 0.7;
         //
-        simplPolygonHullValue = (int) (0.9 * decimalPlaces);
+        int simplPolygonHullValue = (int) (0.9 * decimalPlaces);
         simplPolygonHullJLabel.setText("Polygon Hull:  " + simplPolygonHullValue / decimalPlaces);
         ToolSettings.setSimplPolygonHull(simplPolygonHullValue / decimalPlaces);
         jpanel.add(simplPolygonHullJLabel);
@@ -122,7 +120,7 @@ public class MagicWandDialog extends ToggleDialog {
         ToolSettings.setSimplifyDouglasP(simplDouglaspValue / decimalPlaces);
         jpanel.add(simplDouglaspJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (0.1 * decimalPlaces), simplDouglaspValue);
+        JSlider jSlider = new JSlider(0, (int) (0.3 * decimalPlaces), simplDouglaspValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -149,7 +147,7 @@ public class MagicWandDialog extends ToggleDialog {
         ToolSettings.setSimplTopologyPreserving(simplTopologyPreservingValue / decimalPlaces);
         jpanel.add(simplTopologyPreservingJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int)(0.1 * decimalPlaces), simplTopologyPreservingValue);
+        JSlider jSlider = new JSlider(0, (int) (0.3 * decimalPlaces), simplTopologyPreservingValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);

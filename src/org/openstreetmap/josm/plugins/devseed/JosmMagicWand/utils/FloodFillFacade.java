@@ -1,7 +1,5 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
-import java.util.Random;
-
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -9,13 +7,15 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openstreetmap.josm.tools.Logging;
 
+import java.util.Random;
+
 public class FloodFillFacade {
 
     public static final int FIXED_RANGE = 1;
     private boolean colored = true;
     private boolean masked = true;
     private int range = FIXED_RANGE;
-    private Random random = new Random();
+    private final Random random = new Random();
     private int connectivity = 8;
     private final int newMaskVal = 255;
     private int lowerDiff = 7;
@@ -28,7 +28,7 @@ public class FloodFillFacade {
     }
 
 
-    public int fill(Mat image, Mat mask, int x, int y) {
+    public void fill(Mat image, Mat mask, int x, int y) {
         Point seedPoint = new Point(x, y);
 
         int b = random.nextInt(256);
@@ -43,9 +43,7 @@ public class FloodFillFacade {
         Logging.warn("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity "+ connectivity);
         int flags = connectivity + (newMaskVal << 8) + (range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0);
         //Imgproc.FLOODFILL_MASK_ONLY);
-        int area = 0;
-        area = Imgproc.floodFill(image, mask, seedPoint, newVal, rect, lowerDifference, upperDifference, flags);
-        return area;
+        Imgproc.floodFill(image, mask, seedPoint, newVal, rect, lowerDifference, upperDifference, flags);
     }
 
 
