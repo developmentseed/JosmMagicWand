@@ -7,6 +7,7 @@ import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.*;
 import org.openstreetmap.josm.gui.MainApplication;
@@ -15,6 +16,10 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.Projections;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -48,9 +53,9 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
             Logging.error(e);
         }
         boolean hasDraw = drawWays(geometrySimplify);
-//        if (hasDraw) {
-//            removeSelected(actionEvent);
-//        }
+        if (hasDraw) {
+            removeSelected(actionEvent);
+        }
     }
 
     @Override
@@ -68,55 +73,27 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
     }
 
     private List<Geometry> simplifyWays(Collection<Way> ways) throws Exception {
-
         List<Geometry> geometries = new ArrayList<>();
         for (Way w : ways) {
-            Geometry geometry = CommonUtils.coordinates2Geometry(CommonUtils.nodes2Coordinates(w.getNodes()), true);
-            if (ToolSettings.getSimplifyDouglasP() > 0) {
-                geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplifyDouglasP());
-            }
-            if (ToolSettings.getSimplPolygonHull() > 0) {
-                geometry = CommonUtils.simplifyPolygonHull(geometry.copy(), ToolSettings.getSimplPolygonHull());
-            }
-            if (ToolSettings.getSimplTopologyPreserving() > 0) {
-                geometry = CommonUtils.simplifyTopologyPreserving(geometry.copy(), ToolSettings.getSimplTopologyPreserving());
-            }
-            geometries.add(geometry.copy());
+            List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(w.getNodes());
+            Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
+            Geometry geometrySimplify = CommonUtils.simplifyGeometry(geometryMercator);
+            geometries.add(geometrySimplify);
         }
         return geometries;
     }
 
     private boolean drawWays(List<Geometry> geometrySimplify) {
-        boolean hasDraw = false;
-        if (geometrySimplify.isEmpty()) return hasDraw;
+        if (geometrySimplify.isEmpty()) return false;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
-        Collection<Command> cmds = new LinkedList<>();
-        for (Geometry geometry : geometrySimplify) {
-            Way w = new Way();
-
-            List<Node> nodes = new ArrayList<>();
-            for (Coordinate c : geometry.getCoordinates()) {
-                Node n = new Node(new LatLon(c.getX(), c.getY()));
-                nodes.add(n);
-            }
-
-            int index = 0;
-            for (Node n : nodes) {
-                if (index == (nodes.size() - 1)) {
-                    w.addNode(nodes.get(0));
-                } else {
-                    w.addNode(n);
-                    cmds.add(new AddCommand(ds, n));
-                }
-                index++;
-            }
-            w.setKeys(new TagMap("magic_wand_simplify", "yes"));
-            cmds.add(new AddCommand(ds, w));
-            hasDraw = true;
+        try {
+            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometrySimplify, "magic_wand_simplify", "yes");
+            UndoRedoHandler.getInstance().add(new SequenceCommand(tr("simplify way"), cmds));
+            return !cmds.isEmpty();
+        } catch (Exception e) {
+            Logging.error(e);
+            return false;
         }
-
-        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("simplify way"), cmds));
-        return hasDraw;
     }
 
     private void removeSelected(ActionEvent e) {

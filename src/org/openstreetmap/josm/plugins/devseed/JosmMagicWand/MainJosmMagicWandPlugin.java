@@ -17,7 +17,6 @@ import org.openstreetmap.josm.tools.Logging;
 import javax.swing.*;
 
 public class MainJosmMagicWandPlugin extends Plugin {
-    MagicWandDialog magicWandDialog = new MagicWandDialog();
 
     public static final Projection MERCATOR = Projections.getProjectionByCode("EPSG:3857"); // Mercator
 
@@ -32,7 +31,6 @@ public class MainJosmMagicWandPlugin extends Plugin {
     public MainJosmMagicWandPlugin(PluginInformation info) {
         super(info);
         try {
-            System.out.println(Double.parseDouble(System.getProperty("java.specification.version")));
             if (Double.parseDouble(System.getProperty("java.specification.version")) >= 12) {
                 nu.pattern.OpenCV.loadLocally();
             } else {
@@ -53,7 +51,7 @@ public class MainJosmMagicWandPlugin extends Plugin {
     @Override
     public void mapFrameInitialized(MapFrame oldFrame, MapFrame newFrame) {
         if (oldFrame == null && newFrame != null) {
-            newFrame.addToggleDialog(magicWandDialog);
+            newFrame.addToggleDialog( new MagicWandDialog());
             MainApplication.getMap().addMapMode(new IconToggleButton(new MagicWandAction()));
 
         }

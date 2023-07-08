@@ -14,13 +14,25 @@ import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
+import org.openstreetmap.josm.command.AddCommand;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.TagMap;
+import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.tools.Logging;
 
@@ -225,9 +237,42 @@ public class CommonUtils {
     }
 
     public static List<Coordinate> nodes2Coordinates(List<Node> nodes) {
-        return nodes.stream().map(n -> new Coordinate(n.lat(), n.lon())).collect(Collectors.toList());
+        // always work in "EPSG:3857"
+        return nodes.stream().map(n -> {
+            EastNorth eastNorth = n.getEastNorth();
+            return new Coordinate(eastNorth.getX(), eastNorth.getY());
+        }).collect(Collectors.toList());
     }
 
+    public static List<Node> coordinates2Nodes(List<Coordinate> coordinates, Projection projection) {
+        return coordinates.stream().map(c -> {
+            EastNorth eastNorth = new EastNorth(c.x, c.y);
+            LatLon latLon = projection.eastNorth2latlon(eastNorth);
+            return new Node(latLon);
+        }).collect(Collectors.toList());
+    }
+
+    public static Collection<Command> geometry2WayCommands(DataSet ds, List<Geometry> geometries, String tagMapKey, String tagMapValue) throws Exception {
+        Collection<Command> cmds = new LinkedList<>();
+        Projection projection = ProjectionRegistry.getProjection();
+        for (Geometry geometry : geometries) {
+            Way w = new Way();
+            List<Node> nodes = coordinates2Nodes(List.of(geometry.getCoordinates()), projection);
+            int index = 0;
+            for (Node n : nodes) {
+                if (index == (nodes.size() - 1)) {
+                    w.addNode(nodes.get(0));
+                } else {
+                    w.addNode(n);
+                    cmds.add(new AddCommand(ds, n));
+                }
+                index++;
+            }
+            w.setKeys(new TagMap(tagMapKey, tagMapValue));
+            cmds.add(new AddCommand(ds, w));
+        }
+        return cmds;
+    }
 
     public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle, double tolerance) throws Exception {
         // http://graphics.cs.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html
@@ -439,4 +484,16 @@ public class CommonUtils {
         return filterByArea(geometries, 0.1);
     }
 
+    public static Geometry simplifyGeometry(Geometry geometry) {
+        if (ToolSettings.getSimplifyDouglasP() > 0) {
+            geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplifyDouglasP());
+        }
+        if (ToolSettings.getSimplPolygonHull() > 0) {
+            geometry = CommonUtils.simplifyPolygonHull(geometry.copy(), ToolSettings.getSimplPolygonHull());
+        }
+        if (ToolSettings.getSimplTopologyPreserving() > 0) {
+            geometry = CommonUtils.simplifyTopologyPreserving(geometry.copy(), ToolSettings.getSimplTopologyPreserving());
+        }
+        return geometry.copy();
+    }
 }
