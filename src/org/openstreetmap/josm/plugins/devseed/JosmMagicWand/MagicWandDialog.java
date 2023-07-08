@@ -9,20 +9,23 @@ import java.util.List;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MagicWandDialog extends ToggleDialog {
-    // general
+    // variables
     private int toleranceValue = 9;
-
-    // Simplify
-
     final int simplDouglaspValue = 10;
 
     final int simplTopologyPreservingValue = 20;
 
+    final int chaikinSmooDistanceValue = 25;
+    final int chaikinSmooAngleValue = 60;
+
+    // Jlabels
     final JLabel toleranceJLabel;
 
     final JLabel simplPolygonHullJLabel;
     final JLabel simplTopologyPreservingJLabel;
     final JLabel simplDouglaspJLabel;
+    final JLabel chaikinSmootherDistanceJLabel;
+    final JLabel chaikinSmootherAngleJLabel;
 
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand.svg", tr("Open MagicWand windows"), null, 90);
@@ -36,12 +39,17 @@ public class MagicWandDialog extends ToggleDialog {
         simplPolygonHullJLabel = new JLabel();
         simplTopologyPreservingJLabel = new JLabel();
         simplDouglaspJLabel = new JLabel();
+        chaikinSmootherDistanceJLabel = new JLabel();
+        chaikinSmootherAngleJLabel = new JLabel();
+
         // tolerance
         panel.add(buildTolerancePanel());
 //        simplify
         panel.add(buildPolygonHullPanel());
         panel.add(buildDouglaspPanel());
         panel.add(buildTopologyPreservingPanel());
+        panel.add(buildChaikinDistancePanel());
+        panel.add(buildChaikinAnglePanel());
 
         createLayout(panel, true, List.of(new SideButton[]{}));
     }
@@ -158,6 +166,63 @@ public class MagicWandDialog extends ToggleDialog {
             double simplTopologyPreservingDouble = source.getValue() / decimalPlaces;
             simplTopologyPreservingJLabel.setText(tr("Topology: " + simplTopologyPreservingDouble));
             ToolSettings.setSimplTopologyPreserving(simplTopologyPreservingDouble);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+
+    private JPanel buildChaikinDistancePanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        double minValue = 10.0;
+        chaikinSmootherDistanceJLabel.setText("Smooth Distance:  " + chaikinSmooDistanceValue  );
+        ToolSettings.setChaikinSmooDistance(chaikinSmooDistanceValue);
+        jpanel.add(chaikinSmootherDistanceJLabel);
+        //
+        JSlider jSlider = new JSlider((int) minValue, 500, chaikinSmooDistanceValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double chaikinSmootherDistanceDouble = source.getValue();
+            if (chaikinSmootherDistanceDouble <= minValue){
+                chaikinSmootherDistanceDouble = 0.0;
+            }
+            chaikinSmootherDistanceJLabel.setText(tr("Smooth Distance: " + chaikinSmootherDistanceDouble));
+            ToolSettings.setChaikinSmooDistance(chaikinSmootherDistanceDouble);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+    private JPanel buildChaikinAnglePanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        double minValue = 40.0;
+        chaikinSmootherAngleJLabel.setText("Smooth Angle:  " + chaikinSmooAngleValue  );
+        ToolSettings.setChaikinSmooAngle(chaikinSmooAngleValue);
+        jpanel.add(chaikinSmootherAngleJLabel);
+        //
+        JSlider jSlider = new JSlider((int) minValue, 160, chaikinSmooAngleValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double chaikinSmootherDouble = source.getValue();
+            if (chaikinSmootherDouble <= minValue){
+                chaikinSmootherDouble = 0.0;
+            }
+            chaikinSmootherAngleJLabel.setText(tr("Smooth Angle: " + chaikinSmootherDouble));
+            ToolSettings.setChaikinSmooAngle(chaikinSmootherDouble);
         });
         jpanel.add(new JSeparator());
 

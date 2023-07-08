@@ -40,7 +40,7 @@ public class FloodFillFacade {
 
         Scalar lowerDifference = new Scalar(lowerDiff, lowerDiff, lowerDiff);
         Scalar upperDifference = new Scalar(upperDiff, upperDiff, upperDiff);
-        Logging.warn("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity "+ connectivity);
+        Logging.info("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity "+ connectivity);
         int flags = connectivity + (newMaskVal << 8) + (range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0);
         //Imgproc.FLOODFILL_MASK_ONLY);
         Imgproc.floodFill(image, mask, seedPoint, newVal, rect, lowerDifference, upperDifference, flags);

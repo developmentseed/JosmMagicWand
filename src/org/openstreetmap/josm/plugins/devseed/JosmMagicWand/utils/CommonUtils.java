@@ -1,12 +1,15 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.algorithm.Angle;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
-import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
@@ -276,84 +279,48 @@ public class CommonUtils {
     public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle, double tolerance) throws Exception {
         // http://graphics.cs.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html
         Coordinate[] coordinates = geometry.getCoordinates();
-        if (coordinates.length == 0) return geometry;
+        if (coordinates.length <= 3) return geometry;
+        if (maxAngle == 0 && tolerance == 0) return geometry;
 
+        double smoothingFactor = 0.25;
         List<Coordinate> tmpCoords = new ArrayList<>();
-        tmpCoords.add(new Coordinate(coordinates[0].x, coordinates[0].y));
-        int coordinatesSize = coordinates.length;
-        var distanceTolerance = Math.abs(geometry.getLength()) * tolerance;
 
-        for (int i = 0; i < coordinatesSize - 1; i++) {
+        for (int i = 0; i < coordinates.length - 1; i++) {
+            Coordinate p2 = coordinates[i];
+            Coordinate p1, p3;
 
-            Coordinate pb = new Coordinate(coordinates[i].x, coordinates[i].y);
-            Coordinate pc = coordinates[i + 1];
-            if (pb.distance(pc) <= distanceTolerance) {
-                if (!tmpCoords.contains(pb)) tmpCoords.add(pb);
-                continue;
-            }
-
-            if (i > 0) {
-                Coordinate pa = coordinates[i - 1];
-                double angle = angleLine(pa, pb, pc);
-                boolean isRect = 89 <= angle && angle <= 91;
-                if (isRect || maxAngle <= angle) {
-                    if (!tmpCoords.contains(pb)) tmpCoords.add(pb);
-                    continue;
+            if (i == 0) {
+                p1 = coordinates[coordinates.length - 1];
+                p3 = coordinates[1];
+                if (p2.equals(p1)) {
+                    p1 = coordinates[coordinates.length - 2];
                 }
-            }
-
-            var pbx = pb.getX();
-            var pby = pb.getY();
-            var pcx = pc.getX();
-            var pcy = pc.getY();
-
-            Coordinate Q = new Coordinate(0.75 * pbx + 0.25 * pcx, 0.75 * pby + 0.25 * pcy);
-            Coordinate R = new Coordinate(0.25 * pbx + 0.75 * pcx, 0.25 * pby + 0.75 * pcy);
-            tmpCoords.add(Q);
-            tmpCoords.add(R);
-
-        }
-        Logging.info("-- chaikinAlgotihm -- " + maxAngle + " -- " + tolerance + " -- " + geometry.getNumPoints() + " -- " + coordinates.length);
-
-        return coordinates2Geometry(tmpCoords, true);
-
-    }
-
-    public static Polygon removeSmallHole(Polygon geometry, double tolerance, int nextPoints) throws Exception {
-        List<Coordinate> tmpCoords = new ArrayList<>();
-        double perimeter = Math.abs(geometry.getLength());
-        if (perimeter == 0.0) return geometry;
-
-        var perimeterTolerance = perimeter * tolerance;
-
-        int coodinatesLenght = geometry.getCoordinates().length;
-        Coordinate[] coordinates = geometry.getCoordinates();
-        int i = 0;
-
-        while (i <= coodinatesLenght - 1) {
-            int tmpIndex = i;
-            Coordinate p0 = new Coordinate(coordinates[i].x, coordinates[i].y);
-            if (!tmpCoords.contains(p0)) {
-                tmpCoords.add(p0);
-            }
-            for (int j = 1; j < nextPoints; j++) {
-                if ((i + j) >= coodinatesLenght) continue;
-                Coordinate p1 = coordinates[i + j];
-
-                if (p0.distance(p1) <= perimeterTolerance) {
-                    tmpIndex = i + j;
-                }
-            }
-            if (i == tmpIndex) {
-                i++;
             } else {
-                i = tmpIndex;
+                p1 = coordinates[i - 1];
+                p3 = coordinates[i + 1];
             }
-        }
-        Logging.info("-- removeSmallHole -- " + tolerance + " -- " + nextPoints + " -- " + geometry.getNumPoints() + " -- " + tmpCoords.size());
 
-        return (Polygon) coordinates2Geometry(tmpCoords, true);
+            double angle = Math.toDegrees(Angle.angleBetween(p1, p2, p3));
+
+            if (angle < maxAngle) {
+                double x1 = p1.getX() + smoothingFactor * (p2.getX() - p1.getX());
+                double y1 = p1.getY() + smoothingFactor * (p2.getY() - p1.getY());
+
+                double x2 = p2.getX() + smoothingFactor * (p1.getX() - p2.getX());
+                double y2 = p2.getY() + smoothingFactor * (p1.getY() - p2.getY());
+                tmpCoords.add(new Coordinate(x1, y1));
+                tmpCoords.add(new Coordinate(x2, y2));
+            } else {
+                tmpCoords.add(p2);
+            }
+
+        }
+        Logging.info("-- chaikinAlgotihm -- Ang: " + maxAngle + " toler: " + tolerance + " Orig: " + coordinates.length + " new : " + tmpCoords.size());
+
+        return simplifyPolygonHull(coordinates2Geometry(tmpCoords, true), 0.999);
+
     }
+
 
     private static double mPoints(Coordinate ca, Coordinate cb) {
         return (cb.getY() - ca.getY()) / (cb.getX() - ca.getX());

@@ -13,6 +13,9 @@ public final class ToolSettings {
     private static double simplDouglasP;
     private static double simplPolygonHull;
     private static double simplTopologyPreserving;
+    //smooth
+    private static double chaikinSmooDistance;
+    private static double chaikinSmooAngle;
 
     public static int getMaskOpen() {
         return maskOpen;
@@ -69,5 +72,21 @@ public final class ToolSettings {
 
     public static void setSimplifyDouglasP(double simplDouglasP) {
         ToolSettings.simplDouglasP = simplDouglasP;
+    }
+
+    public static double getChaikinSmooAngle() {
+        return chaikinSmooAngle;
+    }
+
+    public static void setChaikinSmooAngle(double chaikinSmooAngle) {
+        ToolSettings.chaikinSmooAngle = chaikinSmooAngle;
+    }
+
+    public static double getChaikinSmooDistance() {
+        return chaikinSmooDistance;
+    }
+
+    public static void setChaikinSmooDistance(double chaikinSmooDistance) {
+        ToolSettings.chaikinSmooDistance = chaikinSmooDistance;
     }
 }
