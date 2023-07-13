@@ -41,16 +41,17 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
             new Notification(tr("No ways selected.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
-        List<Geometry> geometrySimplify = new ArrayList<>();
+
         try {
-            geometrySimplify = simplifyWays(selWays);
+            List<Geometry> geometrySimplify = simplifyWays(selWays);
+            boolean hasDraw = drawWays(geometrySimplify);
+            if (hasDraw) {
+                removeSelected(actionEvent);
+            }
         } catch (Exception e) {
             Logging.error(e);
         }
-        boolean hasDraw = drawWays(geometrySimplify);
-        if (hasDraw) {
-            removeSelected(actionEvent);
-        }
+
     }
 
     @Override
@@ -72,10 +73,8 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
         for (Way w : ways) {
             List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(w.getNodes());
             Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
-            Geometry geometrySimplify = CommonUtils.simplifyGeometry(geometryMercator);
-            Geometry geometrySmooth = CommonUtils.chaikinAlgotihm(geometrySimplify, ToolSettings.getChaikinSmooAngle(), ToolSettings.getChaikinSmooDistance());
-
-            geometries.add(geometrySmooth);
+            Geometry geometrySimplify = CommonUtils.simplifySmoothGeometry(geometryMercator);
+            geometries.add(geometrySimplify);
         }
         return geometries;
     }

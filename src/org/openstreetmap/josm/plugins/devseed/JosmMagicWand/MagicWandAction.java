@@ -303,7 +303,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         if (geometries.isEmpty()) return;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
         // simplify
-        List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifyGeometry).collect(Collectors.toList());
+        List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifySmoothGeometry).collect(Collectors.toList());
         // smooth
         Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesSimplify, "magic_wand", "yes");
         UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));

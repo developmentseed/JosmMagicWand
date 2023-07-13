@@ -124,7 +124,6 @@ public class CommonUtils {
         return image_tmp;
     }
 
-
     // IMAGE EFFECT
     public static Mat blur(Mat input, int size) {
         Logging.info("-- blur -- " + size);
@@ -203,7 +202,6 @@ public class CommonUtils {
         return result;
     }
 
-
     public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
         Geometry result = PolygonHullSimplifier.hull(g, true, vertex);
         Logging.info("-- simplifyPolygonHull -- " + vertex + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
@@ -276,60 +274,51 @@ public class CommonUtils {
         return cmds;
     }
 
-    public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle, double tolerance) throws Exception {
+    public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle) {
         // http://graphics.cs.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html
+        if (maxAngle == 0) return geometry;
         Coordinate[] coordinates = geometry.getCoordinates();
         if (coordinates.length <= 3) return geometry;
-        if (maxAngle == 0 && tolerance == 0) return geometry;
+        try {
+            double smoothingFactor = 0.25;
+            List<Coordinate> tmpCoords = new ArrayList<>();
 
-        double smoothingFactor = 0.25;
-        List<Coordinate> tmpCoords = new ArrayList<>();
+            for (int i = 0; i < coordinates.length - 1; i++) {
+                Coordinate p2 = coordinates[i];
+                Coordinate p1, p3;
 
-        for (int i = 0; i < coordinates.length - 1; i++) {
-            Coordinate p2 = coordinates[i];
-            Coordinate p1, p3;
-
-            if (i == 0) {
-                p1 = coordinates[coordinates.length - 1];
-                p3 = coordinates[1];
-                if (p2.equals(p1)) {
-                    p1 = coordinates[coordinates.length - 2];
+                if (i == 0) {
+                    p1 = coordinates[coordinates.length - 1];
+                    p3 = coordinates[1];
+                    if (p2.equals(p1)) {
+                        p1 = coordinates[coordinates.length - 2];
+                    }
+                } else {
+                    p1 = coordinates[i - 1];
+                    p3 = coordinates[i + 1];
                 }
-            } else {
-                p1 = coordinates[i - 1];
-                p3 = coordinates[i + 1];
+
+                double angle = Angle.toDegrees(Angle.angleBetween(p1, p2, p3));
+                if (angle <= maxAngle) {
+                    double x1 = p1.getX() + smoothingFactor * (p2.getX() - p1.getX());
+                    double y1 = p1.getY() + smoothingFactor * (p2.getY() - p1.getY());
+
+                    double x2 = p2.getX() + smoothingFactor * (p1.getX() - p2.getX());
+                    double y2 = p2.getY() + smoothingFactor * (p1.getY() - p2.getY());
+                    tmpCoords.add(new Coordinate(x1, y1));
+                    tmpCoords.add(new Coordinate(x2, y2));
+                } else {
+                    tmpCoords.add(p2);
+                }
+
             }
+            Logging.info("-- chaikinAlgotihm -- Ang: " + maxAngle + " Orig: " + coordinates.length + " new : " + tmpCoords.size());
 
-            double angle = Math.toDegrees(Angle.angleBetween(p1, p2, p3));
-
-            if (angle < maxAngle) {
-                double x1 = p1.getX() + smoothingFactor * (p2.getX() - p1.getX());
-                double y1 = p1.getY() + smoothingFactor * (p2.getY() - p1.getY());
-
-                double x2 = p2.getX() + smoothingFactor * (p1.getX() - p2.getX());
-                double y2 = p2.getY() + smoothingFactor * (p1.getY() - p2.getY());
-                tmpCoords.add(new Coordinate(x1, y1));
-                tmpCoords.add(new Coordinate(x2, y2));
-            } else {
-                tmpCoords.add(p2);
-            }
-
+            return simplifyPolygonHull(coordinates2Geometry(tmpCoords, true), 0.999);
+        } catch (Exception e) {
+            Logging.error(e);
+            return geometry;
         }
-        Logging.info("-- chaikinAlgotihm -- Ang: " + maxAngle + " toler: " + tolerance + " Orig: " + coordinates.length + " new : " + tmpCoords.size());
-
-        return simplifyPolygonHull(coordinates2Geometry(tmpCoords, true), 0.999);
-
-    }
-
-
-    private static double mPoints(Coordinate ca, Coordinate cb) {
-        return (cb.getY() - ca.getY()) / (cb.getX() - ca.getX());
-    }
-
-    private static double angleLine(Coordinate a, Coordinate b, Coordinate c) {
-        double mab = mPoints(a, b);
-        double mbc = mPoints(b, c);
-        return Math.atan((mbc - mab) / (1 + (mbc * mab)));
     }
 
     public static List<Geometry> filterByArea(List<Geometry> geometries, double tolerance) {
@@ -344,7 +333,6 @@ public class CommonUtils {
     }
 
     // ACTIONS
-
     public static Mat processImage(Mat mat_image, Mat mat_mask, boolean ctrl_, boolean shift_, int x, int y) throws Exception {
         FloodFillFacade floodFillFacade = new FloodFillFacade();
         Mat mat_flood = new Mat();
@@ -437,7 +425,7 @@ public class CommonUtils {
         return filterByArea(geometries, 0.1);
     }
 
-    public static Geometry simplifyGeometry(Geometry geometry) {
+    public static Geometry simplifySmoothGeometry(Geometry geometry) {
         if (ToolSettings.getSimplifyDouglasP() > 0) {
             geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplifyDouglasP());
         }
@@ -446,6 +434,9 @@ public class CommonUtils {
         }
         if (ToolSettings.getSimplTopologyPreserving() > 0) {
             geometry = CommonUtils.simplifyTopologyPreserving(geometry.copy(), ToolSettings.getSimplTopologyPreserving());
+        }
+        if (ToolSettings.getChaikinSmooAngle() > 0) {
+            geometry = CommonUtils.chaikinAlgotihm(geometry.copy(), ToolSettings.getChaikinSmooAngle());
         }
         return geometry.copy();
     }

@@ -10,45 +10,19 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MagicWandDialog extends ToggleDialog {
     // variables
-    private int toleranceValue = 9;
-    final int simplDouglaspValue = 10;
-
-    final int simplTopologyPreservingValue = 20;
-
-    final int chaikinSmooDistanceValue = 25;
-    final int chaikinSmooAngleValue = 60;
-
-    // Jlabels
-    final JLabel toleranceJLabel;
-
-    final JLabel simplPolygonHullJLabel;
-    final JLabel simplTopologyPreservingJLabel;
-    final JLabel simplDouglaspJLabel;
-    final JLabel chaikinSmootherDistanceJLabel;
-    final JLabel chaikinSmootherAngleJLabel;
 
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand.svg", tr("Open MagicWand windows"), null, 90);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        // panel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        // Jlabels
-        toleranceJLabel = new JLabel();
-        //
-        simplPolygonHullJLabel = new JLabel();
-        simplTopologyPreservingJLabel = new JLabel();
-        simplDouglaspJLabel = new JLabel();
-        chaikinSmootherDistanceJLabel = new JLabel();
-        chaikinSmootherAngleJLabel = new JLabel();
 
         // tolerance
         panel.add(buildTolerancePanel());
-//        simplify
+        // simplify
         panel.add(buildPolygonHullPanel());
         panel.add(buildDouglaspPanel());
         panel.add(buildTopologyPreservingPanel());
-        panel.add(buildChaikinDistancePanel());
         panel.add(buildChaikinAnglePanel());
 
         createLayout(panel, true, List.of(new SideButton[]{}));
@@ -58,12 +32,13 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        toleranceJLabel.setText("Tolerance:  " + toleranceValue);
-        ToolSettings.setTolerance(toleranceValue);
+        int initValue = 9;
+        JLabel toleranceJLabel = new JLabel();
+        toleranceJLabel.setText("Tolerance:  " + initValue);
+        ToolSettings.setTolerance(initValue);
         jpanel.add(toleranceJLabel);
-
         //
-        JSlider jSlider = new JSlider(1, 30, toleranceValue);
+        JSlider jSlider = new JSlider(1, 30, initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -73,9 +48,9 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            toleranceValue = source.getValue();
-            toleranceJLabel.setText(tr("Tolerance:  " + toleranceValue));
-            ToolSettings.setTolerance(toleranceValue);
+            int value = source.getValue();
+            toleranceJLabel.setText(tr("Tolerance:  " + value));
+            ToolSettings.setTolerance(value);
         });
         jpanel.add(new JSeparator());
 
@@ -86,15 +61,16 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
+        JLabel simplPolygonHullJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
         double min = 0.7;
+        int initValue = (int) (0.95 * decimalPlaces);
         //
-        int simplPolygonHullValue = (int) (0.9 * decimalPlaces);
-        simplPolygonHullJLabel.setText("Polygon Hull:  " + simplPolygonHullValue / decimalPlaces);
-        ToolSettings.setSimplPolygonHull(simplPolygonHullValue / decimalPlaces);
+        simplPolygonHullJLabel.setText("Polygon Hull:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplPolygonHull(initValue / decimalPlaces);
         jpanel.add(simplPolygonHullJLabel);
         //
-        JSlider jSlider = new JSlider((int) (min * decimalPlaces), (int) decimalPlaces, simplPolygonHullValue);
+        JSlider jSlider = new JSlider((int) (min * decimalPlaces), (int) decimalPlaces, initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -102,15 +78,15 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            double simplPolygonHullValueDouble = source.getValue();
-            if (simplPolygonHullValueDouble <= (min * decimalPlaces)) {
-                simplPolygonHullValueDouble = 0.0;
+            double value = source.getValue();
+            if (value <= (min * decimalPlaces)) {
+                value = 0.0;
             } else {
-                simplPolygonHullValueDouble /= decimalPlaces;
+                value /= decimalPlaces;
             }
 
-            simplPolygonHullJLabel.setText(tr("Polygon Hull: " + simplPolygonHullValueDouble));
-            ToolSettings.setSimplPolygonHull(simplPolygonHullValueDouble);
+            simplPolygonHullJLabel.setText(tr("Polygon Hull: " + value));
+            ToolSettings.setSimplPolygonHull(value);
         });
         jpanel.add(new JSeparator());
 
@@ -121,14 +97,15 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
+        JLabel simplDouglaspJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
-
+        int initValue = 2000;
         //
-        simplDouglaspJLabel.setText("Douglas:  " + simplDouglaspValue / decimalPlaces);
-        ToolSettings.setSimplifyDouglasP(simplDouglaspValue / decimalPlaces);
+        simplDouglaspJLabel.setText("Douglas:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplifyDouglasP(initValue / decimalPlaces);
         jpanel.add(simplDouglaspJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), simplDouglaspValue);
+        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -136,9 +113,9 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            double simplDouglaspDouble = source.getValue() / decimalPlaces;
-            simplDouglaspJLabel.setText(tr("Douglas: " + simplDouglaspDouble));
-            ToolSettings.setSimplifyDouglasP(simplDouglaspDouble);
+            double value = source.getValue() / decimalPlaces;
+            simplDouglaspJLabel.setText(tr("Douglas: " + value));
+            ToolSettings.setSimplifyDouglasP(value);
         });
         jpanel.add(new JSeparator());
 
@@ -149,13 +126,15 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
+        JLabel simplTopologyPreservingJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
+        int initValue = 2000;
         //
-        simplTopologyPreservingJLabel.setText("Topology:  " + simplTopologyPreservingValue / decimalPlaces);
-        ToolSettings.setSimplTopologyPreserving(simplTopologyPreservingValue / decimalPlaces);
+        simplTopologyPreservingJLabel.setText("Topology:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplTopologyPreserving(initValue / decimalPlaces);
         jpanel.add(simplTopologyPreservingJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), simplTopologyPreservingValue);
+        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -163,53 +142,27 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            double simplTopologyPreservingDouble = source.getValue() / decimalPlaces;
-            simplTopologyPreservingJLabel.setText(tr("Topology: " + simplTopologyPreservingDouble));
-            ToolSettings.setSimplTopologyPreserving(simplTopologyPreservingDouble);
+            double value = source.getValue() / decimalPlaces;
+            simplTopologyPreservingJLabel.setText(tr("Topology: " + value));
+            ToolSettings.setSimplTopologyPreserving(value);
         });
         jpanel.add(new JSeparator());
 
         return jpanel;
     }
 
-    private JPanel buildChaikinDistancePanel() {
-        JPanel jpanel = new JPanel();
-        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
-        //
-        double minValue = 10.0;
-        chaikinSmootherDistanceJLabel.setText("Smooth Distance:  " + chaikinSmooDistanceValue  );
-        ToolSettings.setChaikinSmooDistance(chaikinSmooDistanceValue);
-        jpanel.add(chaikinSmootherDistanceJLabel);
-        //
-        JSlider jSlider = new JSlider((int) minValue, 500, chaikinSmooDistanceValue);
-        jSlider.setPaintTrack(true);
-        jSlider.setPaintTicks(true);
-        jSlider.setPaintLabels(true);
-
-        jpanel.add(jSlider);
-        jSlider.addChangeListener(changeEvent -> {
-            JSlider source = (JSlider) changeEvent.getSource();
-            double chaikinSmootherDistanceDouble = source.getValue();
-            if (chaikinSmootherDistanceDouble <= minValue){
-                chaikinSmootherDistanceDouble = 0.0;
-            }
-            chaikinSmootherDistanceJLabel.setText(tr("Smooth Distance: " + chaikinSmootherDistanceDouble));
-            ToolSettings.setChaikinSmooDistance(chaikinSmootherDistanceDouble);
-        });
-        jpanel.add(new JSeparator());
-
-        return jpanel;
-    }
     private JPanel buildChaikinAnglePanel() {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        double minValue = 40.0;
-        chaikinSmootherAngleJLabel.setText("Smooth Angle:  " + chaikinSmooAngleValue  );
-        ToolSettings.setChaikinSmooAngle(chaikinSmooAngleValue);
+        int initValue = 110;
+        double minValue = 20.0;
+        JLabel chaikinSmootherAngleJLabel = new JLabel();
+        chaikinSmootherAngleJLabel.setText("Smooth Angle:  " + initValue);
+        ToolSettings.setChaikinSmooAngle(initValue);
         jpanel.add(chaikinSmootherAngleJLabel);
         //
-        JSlider jSlider = new JSlider((int) minValue, 160, chaikinSmooAngleValue);
+        JSlider jSlider = new JSlider((int) minValue, 170, initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -217,12 +170,12 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            double chaikinSmootherDouble = source.getValue();
-            if (chaikinSmootherDouble <= minValue){
-                chaikinSmootherDouble = 0.0;
+            double value = source.getValue();
+            if (value <= minValue) {
+                value = 0.0;
             }
-            chaikinSmootherAngleJLabel.setText(tr("Smooth Angle: " + chaikinSmootherDouble));
-            ToolSettings.setChaikinSmooAngle(chaikinSmootherDouble);
+            chaikinSmootherAngleJLabel.setText(tr("Smooth Angle: " + value));
+            ToolSettings.setChaikinSmooAngle(value);
         });
         jpanel.add(new JSeparator());
 
