@@ -31,11 +31,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CommonUtils {
@@ -339,13 +337,14 @@ public class CommonUtils {
         mat_flood.create(new Size(mat_image.cols() + 2, mat_image.rows() + 2), CvType.CV_8UC1);
         mat_flood.setTo(new Scalar(0));
         floodFillFacade.setTolerance(ToolSettings.getTolerance());
-        //
+        // improve colors
         Mat mat_blur = blur(mat_image, 7);
         floodFillFacade.fill(mat_blur, mat_flood, x, y);
-        Mat mat_open = open(mat_flood, 5);
+
+        Mat mat_open = open(mat_flood, 9);
         Mat mat_close = close(mat_open, 9);
-        Mat mat_erode = erode(mat_close, 3);
-        Mat mat_dilate = dilate(mat_erode, 5);
+//        Mat mat_erode = erode(mat_close, 3);
+        Mat mat_dilate = dilate(mat_close, 5);
 
 
         if (mat_mask != null) {
@@ -364,7 +363,7 @@ public class CommonUtils {
                 mat_tmp.create(new Size(mat_image.cols() + 2, mat_image.rows() + 2), CvType.CV_8UC1);
                 mat_tmp.setTo(new Scalar(0));
                 Core.subtract(mat_mask.clone(), mat_dilate.clone(), mat_tmp);
-                Mat mat_tmp_open = open(mat_tmp, 5);
+                Mat mat_tmp_open = open(mat_tmp, 9);
                 return mat_tmp_open.clone();
             }
         }
@@ -439,5 +438,18 @@ public class CommonUtils {
             geometry = CommonUtils.chaikinAlgotihm(geometry.copy(), ToolSettings.getChaikinSmooAngle());
         }
         return geometry.copy();
+    }
+
+    public static String encodeImageToBase64(BufferedImage image) {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "jpg", outputStream);
+            byte[] imageBytes = outputStream.toByteArray();
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (Exception e) {
+            Logging.error(e);
+            return "";
+        }
+
     }
 }
