@@ -32,6 +32,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -304,8 +305,15 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
         // simplify
         List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifySmoothGeometry).collect(Collectors.toList());
-        // smooth
-        Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesSimplify, "magic_wand", "yes");
+        String tagKey = "magic_wand";
+        String tagValue = "yes";
+        if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
+            List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
+            tagKey = strings.get(0);
+            tagValue = strings.get(1);
+        }
+
+        Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesSimplify, tagKey, tagValue);
         UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
         cleanMasks();
         mapview.repaint();

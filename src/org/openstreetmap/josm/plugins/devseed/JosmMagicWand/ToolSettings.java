@@ -16,7 +16,8 @@ public final class ToolSettings {
     //smooth
     private static double chaikinSmooDistance;
     private static double chaikinSmooAngle;
-
+// tags
+    private static String autoTags;
     public static int getMaskOpen() {
         return maskOpen;
     }
@@ -88,5 +89,13 @@ public final class ToolSettings {
 
     public static void setChaikinSmooDistance(double chaikinSmooDistance) {
         ToolSettings.chaikinSmooDistance = chaikinSmooDistance;
+    }
+
+    public static String getAutoTags() {
+        return ToolSettings.autoTags;
+    }
+
+    public static void setAutoTags(String autoTags) {
+        ToolSettings.autoTags = autoTags;
     }
 }

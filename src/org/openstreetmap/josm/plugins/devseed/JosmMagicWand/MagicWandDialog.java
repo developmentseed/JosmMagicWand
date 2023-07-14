@@ -4,6 +4,9 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -16,7 +19,6 @@ public class MagicWandDialog extends ToggleDialog {
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
         // tolerance
         panel.add(buildTolerancePanel());
         // simplify
@@ -24,6 +26,7 @@ public class MagicWandDialog extends ToggleDialog {
         panel.add(buildDouglaspPanel());
         panel.add(buildTopologyPreservingPanel());
         panel.add(buildChaikinAnglePanel());
+        panel.add(buildAutoAddTag());
 
         createLayout(panel, true, List.of(new SideButton[]{}));
     }
@@ -179,6 +182,21 @@ public class MagicWandDialog extends ToggleDialog {
         });
         jpanel.add(new JSeparator());
 
+        return jpanel;
+    }
+
+    private JPanel buildAutoAddTag() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new FlowLayout());
+        JButton button = new JButton("add Tag");
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                TagsDialog tagsDialog = new TagsDialog();
+                if (tagsDialog.getValue() != 1) return;
+                tagsDialog.saveSettings();
+            }
+        });
+        jpanel.add(button);
         return jpanel;
     }
 
