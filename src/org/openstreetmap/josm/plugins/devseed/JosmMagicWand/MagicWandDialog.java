@@ -5,8 +5,6 @@ import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -66,10 +64,10 @@ public class MagicWandDialog extends ToggleDialog {
         //
         JLabel simplPolygonHullJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
-        double min = 0.7;
+        double min = 0.5;
         int initValue = (int) (0.95 * decimalPlaces);
         //
-        simplPolygonHullJLabel.setText("Polygon Hull:  " + initValue / decimalPlaces);
+        simplPolygonHullJLabel.setText("Exterior contour:  " + initValue / decimalPlaces);
         ToolSettings.setSimplPolygonHull(initValue / decimalPlaces);
         jpanel.add(simplPolygonHullJLabel);
         //
@@ -88,7 +86,7 @@ public class MagicWandDialog extends ToggleDialog {
                 value /= decimalPlaces;
             }
 
-            simplPolygonHullJLabel.setText(tr("Polygon Hull: " + value));
+            simplPolygonHullJLabel.setText(tr("Exterior contour: " + value));
             ToolSettings.setSimplPolygonHull(value);
         });
         jpanel.add(new JSeparator());
@@ -102,13 +100,13 @@ public class MagicWandDialog extends ToggleDialog {
         //
         JLabel simplDouglaspJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
-        int initValue = 2000;
+        int initValue = 1000;
         //
-        simplDouglaspJLabel.setText("Douglas:  " + initValue / decimalPlaces);
+        simplDouglaspJLabel.setText("Vertices:  " + initValue / decimalPlaces);
         ToolSettings.setSimplifyDouglasP(initValue / decimalPlaces);
         jpanel.add(simplDouglaspJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), initValue);
+        JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -117,7 +115,7 @@ public class MagicWandDialog extends ToggleDialog {
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
             double value = source.getValue() / decimalPlaces;
-            simplDouglaspJLabel.setText(tr("Douglas: " + value));
+            simplDouglaspJLabel.setText(tr("Vertices: " + value));
             ToolSettings.setSimplifyDouglasP(value);
         });
         jpanel.add(new JSeparator());
@@ -131,13 +129,13 @@ public class MagicWandDialog extends ToggleDialog {
         //
         JLabel simplTopologyPreservingJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
-        int initValue = 2000;
+        int initValue = 1000;
         //
         simplTopologyPreservingJLabel.setText("Topology:  " + initValue / decimalPlaces);
         ToolSettings.setSimplTopologyPreserving(initValue / decimalPlaces);
         jpanel.add(simplTopologyPreservingJLabel);
         //
-        JSlider jSlider = new JSlider(0, (int) (3 * decimalPlaces), initValue);
+        JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -189,12 +187,10 @@ public class MagicWandDialog extends ToggleDialog {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new FlowLayout());
         JButton button = new JButton("add Tag");
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                TagsDialog tagsDialog = new TagsDialog();
-                if (tagsDialog.getValue() != 1) return;
-                tagsDialog.saveSettings();
-            }
+        button.addActionListener(e -> {
+            TagsDialog tagsDialog = new TagsDialog();
+            if (tagsDialog.getValue() != 1) return;
+            tagsDialog.saveSettings();
         });
         jpanel.add(button);
         return jpanel;

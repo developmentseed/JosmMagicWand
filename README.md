@@ -22,7 +22,11 @@ colors, it is also possible to add areas and subtract selected areas.
 
 ## Usage
 
-JOSM Magic Wand plugin it has two modes of execution: **generate** and **merge** geometries.
+The JOSM Magic Wand plugin offers three functionalities:
+
+- Generate Geometries
+- Merge Geometries
+- Simplify Geometries 
 
 ### Generate geometries.
 
@@ -48,18 +52,57 @@ This functionality allows you to merge several geometries into one, the geometri
 - Select one or more geometries.
 - Press `ctrl + 3`.
 
+### Simplify geometries.
+
+This functionality allows you to simplify and smooth a geometry.
+
+- Select one or more geometries.
+- Press `ctrl + 4`.
+
+
 ## Requirements
 
 - Java JDK 11+.
 - JOSM 18193 or higher.
 
-## Extra options
+## Extra options 
 
 ![image](https://user-images.githubusercontent.com/12978932/200949130-5c4bdea3-cccb-4865-987a-5d15013089d7.png)
 
+![image](https://github.com/developmentseed/JosmMagicWand/assets/12978932/3261b754-e1f2-495b-9255-d0cc83b6009c)
 1. Select mode.
 2. Open window.
-3. Adjust the tolerance of magic wand. 
+3. In the window, you will find the following options:
+
+   - **Tolerance**: This option allows you to configure the color tolerance of the Magic Wand tool.
+
+    ```
+   Higher values expand the tolerance to more colors.
+   Lower values make the tool more specific to colors.
+   ```
+   - **Exterior contour**: This algorithm is specifically designed to simplify polygons while maintaining the shape and outer contour (hull) of the original polygon.
+
+    ```
+    Higher values result in less simplification.
+    Lower values result in more simplification.
+    ```
+   - **Vertices**: This algorithm focuses on the general simplification of polygons. Its goal is to reduce the number of vertices in a geometry while preserving its overall shape.
+
+    ```
+   Higher values result in more simplification.
+   Lower values result in less simplification.
+   ```
+   - **Topology**: This algorithm is used to simplify geometries while preserving their topology. Topology refers to the spatial relationship and connectivity between geometric elements.
+   
+    ```
+    Higher values result in more simplification.
+    Lower values result in less simplification.
+    ```
+    - **Smooth Angle**: This option allows you to smooth very sharp angles. The value entered represents the minimum angle to be simplified.
+    - **add tag**: a pop-up window will appear, allowing you to enter the tag that will be added when generating or simplifying the geometry, the format its `key=value`.
+
+
+To disable the algorithms, set the value to 0.
 
 ## Use cases
 ### Cases where it works well

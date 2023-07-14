@@ -21,6 +21,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -89,7 +90,14 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
 
         try {
-            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometries, "magic_wand_merge", "yes");
+            String tagKey = "magic_wand_merge";
+            String tagValue = "yes";
+            if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
+                List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
+                tagKey = strings.get(0);
+                tagValue = strings.get(1);
+            }
+            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometries, tagKey, tagValue);
             UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
             return !cmds.isEmpty();
         } catch (Exception e) {
