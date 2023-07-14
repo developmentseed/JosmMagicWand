@@ -1,12 +1,31 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.algorithm.Angle;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
+import org.openstreetmap.josm.command.AddCommand;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.TagMap;
+import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.projection.Projection;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
+import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,19 +33,14 @@ import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.opencv.core.Point;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.photo.Photo;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
-import org.openstreetmap.josm.tools.Logging;
-
 public class CommonUtils {
-
-    public static Mat BufferedImage2Mat(BufferedImage bi) {
+    // IMAGE
+    public static Mat bufferedImage2Mat(BufferedImage bi) {
         Mat mat = new Mat(bi.getHeight(), bi.getWidth(), CvType.CV_8UC3);
         byte[] data = ((DataBufferByte) bi.getRaster().getDataBuffer()).getData();
         mat.put(0, 0, data);
@@ -79,122 +93,20 @@ public class CommonUtils {
         return image;
     }
 
-    public static Mat blur(Mat input, int size) {
-        Logging.info("---------- blur ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Imgproc.blur(input, outputImage, new Size(size, size));
-        return outputImage;
-    }
-
-    public static Mat gaussian(Mat input, int size) {
-        Logging.info("---------- gaussian ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Imgproc.GaussianBlur(input, outputImage, new Size(size, size), 2);
-        return outputImage;
-    }
-
-    public static Mat cany(Mat imput, int size) {
-        Logging.info("---------- cany ---------- " + size);
-        Mat outputImage = new Mat(new Size(1, 1), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.Canny(imput, outputImage, size, size * 2 + 1);
-        return outputImage;
-    }
-
-    public static Mat dilate(Mat input, int size) {
-        Logging.info("---------- dilate ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_DILATE, kernel);
-        return outputImage;
-    }
-
-    public static Mat erode(Mat input, int size) {
-        Logging.info("---------- erode ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_ERODE, kernel);
-        return outputImage;
-    }
-
-    public static Mat open(Mat input, int size) {
-        Logging.info("---------- open ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_OPEN, kernel);
-        return outputImage;
-    }
-
-    public static Mat close(Mat input, int size) {
-        Logging.info("---------- close ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
-        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_CLOSE, kernel);
-        return outputImage;
-    }
-
-    public static Mat fastDenoising(Mat input, int elementSize) {
-        Mat outputImage = new Mat();
-        Photo.fastNlMeansDenoisingColored(input, outputImage, elementSize);
-        return outputImage;
-    }
-
-    public static Mat median(Mat input, int size) {
-        Logging.info("---------- median ---------- " + size);
-        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
-        Imgproc.medianBlur(input, outputImage, size);
-        return outputImage;
-    }
-
-    private Mat getKernelFromShape(int elementSize, int elementShape) {
-        return Imgproc.getStructuringElement(elementShape, new Size(elementSize * 2 + 1, elementSize * 2 + 1), new Point(elementSize, elementSize));
-    }
-
-    public static List<MatOfPoint> obtainContour(Mat input) {
-        Logging.info("---------- obtainContour ---------- ");
-        Mat cropMat = input.submat(2, input.rows(), 2, input.cols());
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchey = new Mat();
-        Imgproc.findContours(cropMat, contours, hierarchey, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        return contours;
-    }
-
     public static MatOfPoint2f toMatOfPointFloat(MatOfPoint mat) {
         MatOfPoint2f matFloat = new MatOfPoint2f();
         mat.convertTo(matFloat, CvType.CV_32FC2);
         return matFloat;
     }
 
-    public static Geometry simplifyDP(Geometry g, double distance) {
-        return DouglasPeuckerSimplifier.simplify(g, distance);
+    public static List<MatOfPoint> obtainContour(Mat input) {
+        Logging.info("-- obtainContour -- ");
+        Mat cropMat = input.submat(2, input.rows(), 2, input.cols());
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchey = new Mat();
+        Imgproc.findContours(cropMat, contours, hierarchey, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        return contours;
     }
-
-    public static Geometry reduceGeometry(Geometry g, int scale) {
-        return GeometryPrecisionReducer.reduce(g, new PrecisionModel(scale));
-    }
-
-    public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
-        return PolygonHullSimplifier.hull(g, true, vertex);
-    }
-
-    public static Geometry simplifyTopologyPreservingSimplifier(Geometry g, double distance) {
-        return TopologyPreservingSimplifier.simplify(g, distance);
-    }
-
-    public static Geometry Coordinates2Geometry(List<Coordinate> coordinates, boolean close) throws Exception {
-        GeometryFactory gf = new GeometryFactory();
-
-        if (close) {
-            if (!coordinates.get(coordinates.size() - 1).equals(coordinates.get(0)))
-                coordinates.add(coordinates.get(0));
-            var tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
-            if (!tmpPolygon.isValid()) {
-                return GeometryFixer.fix(tmpPolygon);
-            }
-            return tmpPolygon;
-        }
-        return gf.createLineString(coordinates.toArray(new Coordinate[]{}));
-    }
-
 
     public static Mat maskInsideImage(Mat image, Mat mask, Double alpha) {
         Mat mask_gbr = new Mat();
@@ -212,122 +124,201 @@ public class CommonUtils {
         return image_tmp;
     }
 
-
-    public static List<Polygon> mergeGeometry(List<CustomPolygon> polygons) throws Exception {
-        Logging.info("---------- mergeGeometry ----------");
-        List<Polygon> newPolygons = new ArrayList<>();
-
-        for (CustomPolygon polygon : polygons) {
-            Polygon newPolygon = (Polygon) polygon.polygon().copy();
-            boolean isUseTmp = false;
-            if (polygon.isUse()) continue;
-            for (CustomPolygon polygonSecond : polygons) {
-                if (polygonSecond.isUse()) continue;
-                if (polygon.id().equals(polygonSecond.id())) continue;
-                if (newPolygon.intersects(polygonSecond.polygon())) {
-                    newPolygon = (Polygon) newPolygon.union(polygonSecond.polygon());
-                    polygonSecond.usePolygon();
-                    isUseTmp = true;
-                }
-            }
-            if (isUseTmp) polygon.usePolygon();
-
-            newPolygons.add((Polygon) simplifyPolygonHull(newPolygon, 0.8));
-
-        }
-        Logging.info("polygons " + polygons.size() + " newPolygons " + newPolygons.size());
-        return newPolygons;
+    // IMAGE EFFECT
+    public static Mat blur(Mat input, int size) {
+        Logging.info("-- blur -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Imgproc.blur(input, outputImage, new Size(size, size));
+        return outputImage;
     }
 
-    public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle, double tolerance) throws Exception {
+    public static Mat gaussian(Mat input, int size) {
+        Logging.info("-- gaussian -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Imgproc.GaussianBlur(input, outputImage, new Size(size, size), 2);
+        return outputImage;
+    }
+
+    public static Mat cany(Mat imput, int size) {
+        Logging.info("-- cany -- " + size);
+        Mat outputImage = new Mat(new Size(1, 1), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.Canny(imput, outputImage, size, size * 2 + 1);
+        return outputImage;
+    }
+
+    public static Mat dilate(Mat input, int size) {
+        Logging.info("-- dilate -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_DILATE, kernel);
+        return outputImage;
+    }
+
+    public static Mat erode(Mat input, int size) {
+        Logging.info("-- erode -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_ERODE, kernel);
+        return outputImage;
+    }
+
+    public static Mat open(Mat input, int size) {
+        Logging.info("-- open -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_OPEN, kernel);
+        return outputImage;
+    }
+
+    public static Mat close(Mat input, int size) {
+        Logging.info("-- close -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Mat kernel = new Mat(new Size(size, size), CvType.CV_8UC1, new Scalar(255));
+        Imgproc.morphologyEx(input, outputImage, Imgproc.MORPH_CLOSE, kernel);
+        return outputImage;
+    }
+
+    public static Mat fastDenoising(Mat input, int elementSize) {
+        Mat outputImage = new Mat();
+        Photo.fastNlMeansDenoisingColored(input, outputImage, elementSize);
+        return outputImage;
+    }
+
+    public static Mat median(Mat input, int size) {
+        Logging.info("-- median -- " + size);
+        Mat outputImage = new Mat(input.rows(), input.cols(), input.type());
+        Imgproc.medianBlur(input, outputImage, size);
+        return outputImage;
+    }
+
+    private Mat getKernelFromShape(int elementSize, int elementShape) {
+        return Imgproc.getStructuringElement(elementShape, new Size(elementSize * 2 + 1, elementSize * 2 + 1), new Point(elementSize, elementSize));
+    }
+    // GEOMETRY SIMPLIFY
+
+    public static Geometry simplifyDouglasP(Geometry g, double distance) {
+        Geometry result = DouglasPeuckerSimplifier.simplify(g, distance);
+        Logging.info("-- simplifyDouglasP -- " + distance + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
+        return result;
+    }
+
+    public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
+        Geometry result = PolygonHullSimplifier.hull(g, true, vertex);
+        Logging.info("-- simplifyPolygonHull -- " + vertex + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
+        return result;
+    }
+
+    public static Geometry simplifyTopologyPreserving(Geometry g, double distance) {
+        Geometry result = TopologyPreservingSimplifier.simplify(g, distance);
+        Logging.info("-- simplifyTopologyPreserving -- " + distance + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
+        return result;
+    }
+
+    public static Geometry reduceGeometry(Geometry g, int scale) {
+        Geometry result = GeometryPrecisionReducer.reduce(g, new PrecisionModel(scale));
+        Logging.info("-- reduceGeometry -- " + scale + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
+        return result;
+    }
+
+    // GEOMETRY UTILS
+    public static Geometry coordinates2Geometry(List<Coordinate> coordinates, boolean close) throws Exception {
+        GeometryFactory gf = new GeometryFactory();
+
+        if (close) {
+            if (!coordinates.get(coordinates.size() - 1).equals(coordinates.get(0)))
+                coordinates.add(coordinates.get(0));
+            var tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
+            if (!tmpPolygon.isValid()) {
+                return GeometryFixer.fix(tmpPolygon);
+            }
+            return tmpPolygon;
+        }
+        return gf.createLineString(coordinates.toArray(new Coordinate[]{}));
+    }
+
+    public static List<Coordinate> nodes2Coordinates(List<Node> nodes) {
+        // always work in "EPSG:3857"
+        return nodes.stream().map(n -> {
+            EastNorth eastNorth = n.getEastNorth();
+            return new Coordinate(eastNorth.getX(), eastNorth.getY());
+        }).collect(Collectors.toList());
+    }
+
+    public static List<Node> coordinates2Nodes(List<Coordinate> coordinates, Projection projection) {
+        return coordinates.stream().map(c -> {
+            EastNorth eastNorth = new EastNorth(c.x, c.y);
+            LatLon latLon = projection.eastNorth2latlon(eastNorth);
+            return new Node(latLon);
+        }).collect(Collectors.toList());
+    }
+
+    public static Collection<Command> geometry2WayCommands(DataSet ds, List<Geometry> geometries, String tagMapKey, String tagMapValue) throws Exception {
+        Collection<Command> cmds = new LinkedList<>();
+        Projection projection = ProjectionRegistry.getProjection();
+        for (Geometry geometry : geometries) {
+            Way w = new Way();
+            List<Node> nodes = coordinates2Nodes(List.of(geometry.getCoordinates()), projection);
+            int index = 0;
+            for (Node n : nodes) {
+                if (index == (nodes.size() - 1)) {
+                    w.addNode(nodes.get(0));
+                } else {
+                    w.addNode(n);
+                    cmds.add(new AddCommand(ds, n));
+                }
+                index++;
+            }
+            w.setKeys(new TagMap(tagMapKey, tagMapValue));
+            cmds.add(new AddCommand(ds, w));
+        }
+        return cmds;
+    }
+
+    public static Geometry chaikinAlgotihm(Geometry geometry, double maxAngle) {
         // http://graphics.cs.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html
+        if (maxAngle == 0) return geometry;
         Coordinate[] coordinates = geometry.getCoordinates();
-        if (coordinates.length == 0) return geometry;
+        if (coordinates.length <= 3) return geometry;
+        try {
+            double smoothingFactor = 0.25;
+            List<Coordinate> tmpCoords = new ArrayList<>();
 
-        List<Coordinate> tmpCoords = new ArrayList<>();
-        tmpCoords.add(new Coordinate(coordinates[0].x, coordinates[0].y));
-        int coordinatesSize = coordinates.length;
-        var distanceTolerance = Math.abs(geometry.getLength()) * tolerance;
+            for (int i = 0; i < coordinates.length - 1; i++) {
+                Coordinate p2 = coordinates[i];
+                Coordinate p1, p3;
 
-        for (int i = 0; i < coordinatesSize - 1; i++) {
-
-            Coordinate pb = new Coordinate(coordinates[i].x, coordinates[i].y);
-            Coordinate pc = coordinates[i + 1];
-            if (pb.distance(pc) <= distanceTolerance) {
-                if (!tmpCoords.contains(pb)) tmpCoords.add(pb);
-                continue;
-            }
-
-            if (i > 0) {
-                Coordinate pa = coordinates[i - 1];
-                double angle = angleLine(pa, pb, pc);
-                boolean isRect = 89 <= angle && angle <= 91;
-                if (isRect || maxAngle <= angle) {
-                    if (!tmpCoords.contains(pb)) tmpCoords.add(pb);
-                    continue;
+                if (i == 0) {
+                    p1 = coordinates[coordinates.length - 1];
+                    p3 = coordinates[1];
+                    if (p2.equals(p1)) {
+                        p1 = coordinates[coordinates.length - 2];
+                    }
+                } else {
+                    p1 = coordinates[i - 1];
+                    p3 = coordinates[i + 1];
                 }
-            }
 
-            var pbx = pb.getX();
-            var pby = pb.getY();
-            var pcx = pc.getX();
-            var pcy = pc.getY();
+                double angle = Angle.toDegrees(Angle.angleBetween(p1, p2, p3));
+                if (angle <= maxAngle) {
+                    double x1 = p1.getX() + smoothingFactor * (p2.getX() - p1.getX());
+                    double y1 = p1.getY() + smoothingFactor * (p2.getY() - p1.getY());
 
-            Coordinate Q = new Coordinate(0.75 * pbx + 0.25 * pcx, 0.75 * pby + 0.25 * pcy);
-            Coordinate R = new Coordinate(0.25 * pbx + 0.75 * pcx, 0.25 * pby + 0.75 * pcy);
-            tmpCoords.add(Q);
-            tmpCoords.add(R);
-
-        }
-
-        return Coordinates2Geometry(tmpCoords, true);
-
-    }
-
-    public static Polygon removeSmallHole(Polygon geometry, double tolerance, int nextPoints) throws Exception {
-        List<Coordinate> tmpCoords = new ArrayList<>();
-        double perimeter = Math.abs(geometry.getLength());
-        System.out.printf("perimeter " + perimeter);
-        if (perimeter == 0.0) return geometry;
-
-        var perimeterTolerance = perimeter * tolerance;
-
-        int coodinatesLenght = geometry.getCoordinates().length;
-        Coordinate[] coordinates = geometry.getCoordinates();
-        int i = 0;
-
-        while (i <= coodinatesLenght - 1) {
-            int tmpIndex = i;
-            Coordinate p0 = new Coordinate(coordinates[i].x, coordinates[i].y);
-            if (!tmpCoords.contains(p0)) {
-                tmpCoords.add(p0);
-            }
-            for (int j = 1; j < nextPoints; j++) {
-                if ((i + j) >= coodinatesLenght) continue;
-                Coordinate p1 = coordinates[i + j];
-
-                if (p0.distance(p1) <= perimeterTolerance) {
-                    tmpIndex = i + j;
+                    double x2 = p2.getX() + smoothingFactor * (p1.getX() - p2.getX());
+                    double y2 = p2.getY() + smoothingFactor * (p1.getY() - p2.getY());
+                    tmpCoords.add(new Coordinate(x1, y1));
+                    tmpCoords.add(new Coordinate(x2, y2));
+                } else {
+                    tmpCoords.add(p2);
                 }
+
             }
-            if (i == tmpIndex) {
-                i++;
-            } else {
-                i = tmpIndex;
-            }
+            Logging.info("-- chaikinAlgotihm -- Ang: " + maxAngle + " Orig: " + coordinates.length + " new : " + tmpCoords.size());
+
+            return simplifyPolygonHull(coordinates2Geometry(tmpCoords, true), 0.999);
+        } catch (Exception e) {
+            Logging.error(e);
+            return geometry;
         }
-
-        return (Polygon) Coordinates2Geometry(tmpCoords, true);
-    }
-
-    private static double mPoints(Coordinate ca, Coordinate cb) {
-        return (cb.getY() - ca.getY()) / (cb.getX() - ca.getX());
-    }
-
-    private static double angleLine(Coordinate a, Coordinate b, Coordinate c) {
-        double mab = mPoints(a, b);
-        double mbc = mPoints(b, c);
-        return Math.atan((mbc - mab) / (1 + (mbc * mab)));
     }
 
     public static List<Geometry> filterByArea(List<Geometry> geometries, double tolerance) {
@@ -341,6 +332,7 @@ public class CommonUtils {
         return geometries.stream().filter(x -> x.getArea() >= areaTolerance).collect(Collectors.toList());
     }
 
+    // ACTIONS
     public static Mat processImage(Mat mat_image, Mat mat_mask, boolean ctrl_, boolean shift_, int x, int y) throws Exception {
         FloodFillFacade floodFillFacade = new FloodFillFacade();
         Mat mat_flood = new Mat();
@@ -351,7 +343,7 @@ public class CommonUtils {
         Mat mat_blur = blur(mat_image, 7);
         floodFillFacade.fill(mat_blur, mat_flood, x, y);
         Mat mat_open = open(mat_flood, 5);
-        Mat mat_close = close(mat_open, 11);
+        Mat mat_close = close(mat_open, 9);
         Mat mat_erode = erode(mat_close, 3);
         Mat mat_dilate = dilate(mat_erode, 5);
 
@@ -380,53 +372,72 @@ public class CommonUtils {
         return mat_dilate.clone();
     }
 
-    public static List<Geometry> contourn2Geometry(List<MatOfPoint> contours, double simpHull, double simpDp, double smallHoleTolerance, double chaikinAngle) {
-        Logging.info("---------- contourn2Geometry ----------");
+    public static List<Geometry> mergeGeometry(List<CustomPolygon> polygons) throws Exception {
+        Logging.info("-- mergeGeometry --");
+        List<Geometry> newPolygons = new ArrayList<>();
+
+        for (CustomPolygon polygon : polygons) {
+            Geometry newPolygonGeometry = polygon.polygon().copy();
+            boolean isUseTmp = false;
+            if (polygon.isUse()) continue;
+            for (CustomPolygon polygonSecond : polygons) {
+                if (polygonSecond.isUse()) continue;
+                if (polygon.id().equals(polygonSecond.id())) continue;
+                if (newPolygonGeometry.intersects(polygonSecond.polygon())) {
+                    newPolygonGeometry = newPolygonGeometry.union(polygonSecond.polygon());
+                    polygonSecond.usePolygon();
+                    isUseTmp = true;
+                }
+            }
+            if (isUseTmp) polygon.usePolygon();
+
+            newPolygons.add(simplifyPolygonHull(newPolygonGeometry.copy(), 0.999));
+            Logging.info("polygons " + polygons.size() + " newPolygons " + newPolygons.size());
+        }
+        return newPolygons;
+    }
+
+    public static List<Geometry> contourn2Geometry(List<MatOfPoint> contours, MapView mapview) {
+        Logging.info("-- contourn2Geometry --");
         List<Geometry> geometries = new ArrayList<>();
+        Projection projection = ProjectionRegistry.getProjection();
 
         for (MatOfPoint contour : contours) {
-            if (contour.height() <= 3) continue;
+            if (contour.height() <= 5) continue;
             try {
-                List<Coordinate> tmpCoords = new ArrayList<>();
+                if (contour.toList().size() <= 5) continue;
 
+                List<Coordinate> tmpCoords = new ArrayList<>();
                 for (Point p : contour.toList()) {
-                    Coordinate c = new Coordinate(p.x, p.y);
+                    LatLon latLon = mapview.getLatLon(p.x, p.y);
+                    EastNorth eastNorth = latLon.getEastNorth(projection);
+                    Coordinate c = new Coordinate(eastNorth.getX(), eastNorth.getY());
                     tmpCoords.add(c);
                 }
-                if (tmpCoords.size() < 5) continue;
-
                 // create multi
-                var geometryTmp = (Geometry) Coordinates2Geometry(tmpCoords, true);
-
-                geometryTmp = reduceGeometry(geometryTmp, 1);
-
-
-                if (simpHull > 0) {
-                    geometryTmp = simplifyPolygonHull(geometryTmp, simpHull);
-                    Logging.info("simplifyPolygonHull  " + simpHull + " pts: " + geometryTmp.getCoordinates().length);
-                }
-                if (simpDp > 0) {
-                    geometryTmp = simplifyDP(geometryTmp, simpDp);
-                    Logging.info("simplifyDP  " + simpDp + " pts: " + geometryTmp.getCoordinates().length);
-                }
-                if (smallHoleTolerance > 0) {
-                    geometryTmp = removeSmallHole((Polygon) geometryTmp.copy(), smallHoleTolerance, 5);
-                    Logging.info("removeSmallHole  " + smallHoleTolerance + " pts: " + geometryTmp.getCoordinates().length);
-                }
-                if (chaikinAngle > 0) {
-                    geometryTmp = chaikinAlgotihm(geometryTmp, chaikinAngle, smallHoleTolerance);
-                    Logging.info("chaikinAlgotihm  " + chaikinAngle + " pts: " + geometryTmp.getCoordinates().length);
-                }
-                geometries.add(geometryTmp);
-
+                Geometry geometryTmp = coordinates2Geometry(tmpCoords, true);
+                geometries.add(geometryTmp.copy());
             } catch (Exception ex) {
                 Logging.error(ex);
             }
         }
 
-
-        return filterByArea(geometries,0.1);
+        return filterByArea(geometries, 0.1);
     }
 
-
+    public static Geometry simplifySmoothGeometry(Geometry geometry) {
+        if (ToolSettings.getSimplifyDouglasP() > 0) {
+            geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplifyDouglasP());
+        }
+        if (ToolSettings.getSimplPolygonHull() > 0) {
+            geometry = CommonUtils.simplifyPolygonHull(geometry.copy(), ToolSettings.getSimplPolygonHull());
+        }
+        if (ToolSettings.getSimplTopologyPreserving() > 0) {
+            geometry = CommonUtils.simplifyTopologyPreserving(geometry.copy(), ToolSettings.getSimplTopologyPreserving());
+        }
+        if (ToolSettings.getChaikinSmooAngle() > 0) {
+            geometry = CommonUtils.chaikinAlgotihm(geometry.copy(), ToolSettings.getChaikinSmooAngle());
+        }
+        return geometry.copy();
+    }
 }

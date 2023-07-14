@@ -1,18 +1,14 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.tools.Logging;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class CustomPolygon {
     private Polygon pol;
-    private String id;
+    private final String id;
     private boolean isUse;
     private Way way;
 
@@ -28,11 +24,7 @@ public class CustomPolygon {
     public void fromWay(Way w) {
         this.way = w;
         try {
-            List<Coordinate> tmpCords = new ArrayList<>();
-            for (Node n : w.getNodes()) {
-                tmpCords.add(new Coordinate(n.lat(), n.lon()));
-            }
-            this.pol = (Polygon) CommonUtils.Coordinates2Geometry(tmpCords, true);
+            this.pol = (Polygon) CommonUtils.coordinates2Geometry(CommonUtils.nodes2Coordinates(w.getNodes()), true);
         } catch (Exception ex) {
             Logging.error(ex);
         }

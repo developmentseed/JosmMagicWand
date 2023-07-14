@@ -1,56 +1,45 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
-import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.gui.SideButton;
+import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MagicWandDialog extends ToggleDialog {
-    private int toleranceValue = 9;
-    private int maskCloseValue = 5;
-    private int maskOpen = 5;
-    private double simplHull = 0.2;
-    private double simplPerMor = 0.2;
-    private double simplDp = 0.2;
-
-    private final JLabel toleranceJLabel;
-    private final JLabel maskCloseJLabel;
-    private final JLabel maskOpenJLabel;
-    private final JLabel simplHullJLabel;
-    private final JLabel simplPerMorJLabel;
-    private final JLabel simplDpJLabel;
+    // variables
 
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand.svg", tr("Open MagicWand windows"), null, 90);
 
-        JPanel panel = new JPanel(new GridLayout(2, 1));
-        panel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        // Jlabels
-        toleranceJLabel = new JLabel();
-        maskCloseJLabel = new JLabel();
-        maskOpenJLabel = new JLabel();
-        //
-        simplHullJLabel = new JLabel();
-        simplPerMorJLabel = new JLabel();
-        simplDpJLabel = new JLabel();
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        // tolerance
+        panel.add(buildTolerancePanel());
+        // simplify
+        panel.add(buildPolygonHullPanel());
+        panel.add(buildDouglaspPanel());
+        panel.add(buildTopologyPreservingPanel());
+        panel.add(buildChaikinAnglePanel());
+        panel.add(buildAutoAddTag());
 
-        //
-        ToolSettings.setTolerance(toleranceValue);
-        toleranceJLabel.setText(tr("Tolerance:  " + toleranceValue));
-        panel.add(toleranceJLabel);
-        panel.add(buildTolerance());
-        createLayout(panel, false, List.of(new SideButton[]{}));
+        createLayout(panel, true, List.of(new SideButton[]{}));
     }
 
-    private JPanel buildTolerance() {
-        JPanel jpanel = new JPanel(new BorderLayout());
+    private JPanel buildTolerancePanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        JSlider jSlider = new JSlider(1, 50, toleranceValue);
+        int initValue = 9;
+        JLabel toleranceJLabel = new JLabel();
+        toleranceJLabel.setText("Tolerance:  " + initValue);
+        ToolSettings.setTolerance(initValue);
+        jpanel.add(toleranceJLabel);
+        //
+        JSlider jSlider = new JSlider(1, 30, initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
@@ -60,11 +49,151 @@ public class MagicWandDialog extends ToggleDialog {
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
-            toleranceValue = source.getValue();
-            toleranceJLabel.setText(tr("Tolerance:  " + toleranceValue));
-            ToolSettings.setTolerance(toleranceValue);
+            int value = source.getValue();
+            toleranceJLabel.setText(tr("Tolerance:  " + value));
+            ToolSettings.setTolerance(value);
         });
+        jpanel.add(new JSeparator());
 
         return jpanel;
     }
+
+    private JPanel buildPolygonHullPanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        JLabel simplPolygonHullJLabel = new JLabel();
+        double decimalPlaces = Math.pow(10, 3);
+        double min = 0.5;
+        int initValue = (int) (0.95 * decimalPlaces);
+        //
+        simplPolygonHullJLabel.setText("Exterior contour:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplPolygonHull(initValue / decimalPlaces);
+        jpanel.add(simplPolygonHullJLabel);
+        //
+        JSlider jSlider = new JSlider((int) (min * decimalPlaces), (int) decimalPlaces, initValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double value = source.getValue();
+            if (value <= (min * decimalPlaces)) {
+                value = 0.0;
+            } else {
+                value /= decimalPlaces;
+            }
+
+            simplPolygonHullJLabel.setText(tr("Exterior contour: " + value));
+            ToolSettings.setSimplPolygonHull(value);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+
+    private JPanel buildDouglaspPanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        JLabel simplDouglaspJLabel = new JLabel();
+        double decimalPlaces = Math.pow(10, 3);
+        int initValue = 1000;
+        //
+        simplDouglaspJLabel.setText("Vertices:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplifyDouglasP(initValue / decimalPlaces);
+        jpanel.add(simplDouglaspJLabel);
+        //
+        JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double value = source.getValue() / decimalPlaces;
+            simplDouglaspJLabel.setText(tr("Vertices: " + value));
+            ToolSettings.setSimplifyDouglasP(value);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+
+    private JPanel buildTopologyPreservingPanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        JLabel simplTopologyPreservingJLabel = new JLabel();
+        double decimalPlaces = Math.pow(10, 3);
+        int initValue = 1000;
+        //
+        simplTopologyPreservingJLabel.setText("Topology:  " + initValue / decimalPlaces);
+        ToolSettings.setSimplTopologyPreserving(initValue / decimalPlaces);
+        jpanel.add(simplTopologyPreservingJLabel);
+        //
+        JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double value = source.getValue() / decimalPlaces;
+            simplTopologyPreservingJLabel.setText(tr("Topology: " + value));
+            ToolSettings.setSimplTopologyPreserving(value);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+
+    private JPanel buildChaikinAnglePanel() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        //
+        int initValue = 110;
+        double minValue = 20.0;
+        JLabel chaikinSmootherAngleJLabel = new JLabel();
+        chaikinSmootherAngleJLabel.setText("Smooth Angle:  " + initValue);
+        ToolSettings.setChaikinSmooAngle(initValue);
+        jpanel.add(chaikinSmootherAngleJLabel);
+        //
+        JSlider jSlider = new JSlider((int) minValue, 170, initValue);
+        jSlider.setPaintTrack(true);
+        jSlider.setPaintTicks(true);
+        jSlider.setPaintLabels(true);
+
+        jpanel.add(jSlider);
+        jSlider.addChangeListener(changeEvent -> {
+            JSlider source = (JSlider) changeEvent.getSource();
+            double value = source.getValue();
+            if (value <= minValue) {
+                value = 0.0;
+            }
+            chaikinSmootherAngleJLabel.setText(tr("Smooth Angle: " + value));
+            ToolSettings.setChaikinSmooAngle(value);
+        });
+        jpanel.add(new JSeparator());
+
+        return jpanel;
+    }
+
+    private JPanel buildAutoAddTag() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new FlowLayout());
+        JButton button = new JButton("add Tag");
+        button.addActionListener(e -> {
+            TagsDialog tagsDialog = new TagsDialog();
+            if (tagsDialog.getValue() != 1) return;
+            tagsDialog.saveSettings();
+        });
+        jpanel.add(button);
+        return jpanel;
+    }
+
 }

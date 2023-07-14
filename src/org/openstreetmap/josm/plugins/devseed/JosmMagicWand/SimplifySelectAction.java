@@ -1,5 +1,6 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.command.Command;
@@ -13,7 +14,6 @@ import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CustomPolygon;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
 
@@ -27,36 +27,30 @@ import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-public class MergeSelectAction extends JosmAction implements DataSelectionListener {
+public class SimplifySelectAction extends JosmAction implements DataSelectionListener {
 
 
-    public MergeSelectAction() {
-        super(tr("Merge way"), "mapmode/magic-wand-merge", tr("merge multiple geometries into one"), Shortcut.registerShortcut("data:magicwandmerge", tr("Data: {0}", tr("merge multiple geometries into one")), KeyEvent.VK_3, Shortcut.CTRL), true);
+    public SimplifySelectAction() {
+        super(tr("Simplify way"), "mapmode/magic-wand-merge", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (!isEnabled()) return;
-        final Collection<Way> selWays = getSelectedWays();
+        Collection<Way> selWays = getSelectedWays();
         if (selWays.isEmpty()) {
             new Notification(tr("No ways selected.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
         }
 
-        List<Geometry> geometryMerge;
         try {
-            geometryMerge = mergeWays(selWays);
+            List<Geometry> geometrySimplify = simplifyWays(selWays);
+            boolean hasDraw = drawWays(geometrySimplify);
+            if (hasDraw) {
+                removeSelected(actionEvent);
+            }
         } catch (Exception e) {
-            new Notification(tr("Incorrect geometry.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return;
-        }
-        if (geometryMerge.isEmpty()) {
-            new Notification(tr("Does not have merged ways.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return;
-        }
-        boolean hasDraw = drawWays(geometryMerge);
-        if (hasDraw) {
-            removeSelected(actionEvent);
+            Logging.error(e);
         }
 
     }
@@ -75,30 +69,30 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         return getLayerManager().getEditDataSet().getSelectedWays();
     }
 
-    private List<Geometry> mergeWays(Collection<Way> ways) throws Exception {
-        List<CustomPolygon> polygons = new ArrayList<>();
+    private List<Geometry> simplifyWays(Collection<Way> ways) throws Exception {
+        List<Geometry> geometries = new ArrayList<>();
         for (Way w : ways) {
-            CustomPolygon cp = new CustomPolygon();
-            cp.fromWay(w);
-            polygons.add(cp);
+            List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(w.getNodes());
+            Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
+            Geometry geometrySimplify = CommonUtils.simplifySmoothGeometry(geometryMercator);
+            geometries.add(geometrySimplify);
         }
-        return CommonUtils.mergeGeometry(polygons);
+        return geometries;
     }
 
-    private boolean drawWays(List<Geometry> geometries) {
-        if (geometries.isEmpty()) return false;
+    private boolean drawWays(List<Geometry> geometrySimplify) {
+        if (geometrySimplify.isEmpty()) return false;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
-
         try {
-            String tagKey = "magic_wand_merge";
+            String tagKey = "magic_wand_simplify";
             String tagValue = "yes";
             if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
                 List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
                 tagKey = strings.get(0);
                 tagValue = strings.get(1);
             }
-            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometries, tagKey, tagValue);
-            UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
+            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometrySimplify, tagKey, tagValue);
+            UndoRedoHandler.getInstance().add(new SequenceCommand(tr("simplify way"), cmds));
             return !cmds.isEmpty();
         } catch (Exception e) {
             Logging.error(e);
@@ -108,9 +102,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
 
     private void removeSelected(ActionEvent e) {
         MapFrame map = MainApplication.getMap();
-        if (!isEnabled() || !map.mapView.isActiveLayerVisible()) {
-            return;
-        }
+        if (!isEnabled() || !map.mapView.isActiveLayerVisible()) return;
         map.mapModeDelete.doActionPerformed(e);
     }
 
