@@ -7,6 +7,10 @@ import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MagicWandAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog.MagicWandDialog;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;

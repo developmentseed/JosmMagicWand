@@ -1,19 +1,23 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog;
 
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog.ButtonActions.AutoAddTagAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog.ButtonActions.SamEncondeAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 
 import javax.swing.*;
-import java.awt.*;
-import java.util.List;
+import java.util.Arrays;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class MagicWandDialog extends ToggleDialog {
     // variables
+    final private AutoAddTagAction autoAddTagAction = new AutoAddTagAction();
+    final private SamEncondeAction samEncondeAction = new SamEncondeAction();
 
     public MagicWandDialog() {
-        super(tr("Magic Wand"), "magicwand.svg", tr("Open MagicWand windows"), null, 90);
+        super(tr("Magic Wand Config"), "magicwand.svg", tr("Open MagicWand windows"), null, 200, false);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -24,10 +28,15 @@ public class MagicWandDialog extends ToggleDialog {
         panel.add(buildDouglaspPanel());
         panel.add(buildTopologyPreservingPanel());
         panel.add(buildChaikinAnglePanel());
-        panel.add(buildAutoAddTag());
+        //  buttons
+        //  add
+        SideButton addTagButton = new SideButton(autoAddTagAction);
+        // sam
+        SideButton samButton = new SideButton(samEncondeAction);
 
-        createLayout(panel, true, List.of(new SideButton[]{}));
+        createLayout(panel, true, Arrays.asList(addTagButton, samButton));
     }
+
 
     private JPanel buildTolerancePanel() {
         JPanel jpanel = new JPanel();
@@ -183,17 +192,5 @@ public class MagicWandDialog extends ToggleDialog {
         return jpanel;
     }
 
-    private JPanel buildAutoAddTag() {
-        JPanel jpanel = new JPanel();
-        jpanel.setLayout(new FlowLayout());
-        JButton button = new JButton("add Tag");
-        button.addActionListener(e -> {
-            TagsDialog tagsDialog = new TagsDialog();
-            if (tagsDialog.getValue() != 1) return;
-            tagsDialog.saveSettings();
-        });
-        jpanel.add(button);
-        return jpanel;
-    }
 
 }
