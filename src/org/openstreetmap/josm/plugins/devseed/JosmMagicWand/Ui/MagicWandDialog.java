@@ -1,20 +1,23 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui;
 
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog.ButtonActions.AutoAddTagAction;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Dialog.ButtonActions.SamEncondeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.SamEncondeAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImageGrid;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-public class MagicWandDialog extends ToggleDialog {
+public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListener {
     // variables
-    final private AutoAddTagAction autoAddTagAction = new AutoAddTagAction();
-    final private SamEncondeAction samEncondeAction = new SamEncondeAction();
+    private SamImageGrid samImageGrid;
 
     public MagicWandDialog() {
         super(tr("Magic Wand Config"), "magicwand.svg", tr("Open MagicWand windows"), null, 200, false);
@@ -28,11 +31,12 @@ public class MagicWandDialog extends ToggleDialog {
         panel.add(buildDouglaspPanel());
         panel.add(buildTopologyPreservingPanel());
         panel.add(buildChaikinAnglePanel());
+        panel.add(buildSamImagesPanel());
         //  buttons
         //  add
-        SideButton addTagButton = new SideButton(autoAddTagAction);
+        SideButton addTagButton = new SideButton(new AutoAddTagAction());
         // sam
-        SideButton samButton = new SideButton(samEncondeAction);
+        SideButton samButton = new SideButton(new SamEncondeAction(this));
 
         createLayout(panel, true, Arrays.asList(addTagButton, samButton));
     }
@@ -112,7 +116,7 @@ public class MagicWandDialog extends ToggleDialog {
         int initValue = 1000;
         //
         simplDouglaspJLabel.setText("Vertices:  " + initValue / decimalPlaces);
-        ToolSettings.setSimplifyDouglasP(initValue / decimalPlaces);
+        ToolSettings.setSimplDouglasP(initValue / decimalPlaces);
         jpanel.add(simplDouglaspJLabel);
         //
         JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
@@ -125,7 +129,7 @@ public class MagicWandDialog extends ToggleDialog {
             JSlider source = (JSlider) changeEvent.getSource();
             double value = source.getValue() / decimalPlaces;
             simplDouglaspJLabel.setText(tr("Vertices: " + value));
-            ToolSettings.setSimplifyDouglasP(value);
+            ToolSettings.setSimplDouglasP(value);
         });
         jpanel.add(new JSeparator());
 
@@ -192,5 +196,24 @@ public class MagicWandDialog extends ToggleDialog {
         return jpanel;
     }
 
+    private JScrollPane buildSamImagesPanel() {
+        samImageGrid = new SamImageGrid();
+        JScrollPane scrollPane = new JScrollPane(samImageGrid);
+        scrollPane.setMinimumSize(new Dimension(200,300));
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
+        return scrollPane;
+    }
+
+
+    @Override
+    public void onAddSamImage(SamImage samImage) {
+        samImageGrid.addSamImage(samImage);
+    }
+
+    @Override
+    public void onRemoveAll() {
+        samImageGrid.removeAllSamImage();
+    }
 }

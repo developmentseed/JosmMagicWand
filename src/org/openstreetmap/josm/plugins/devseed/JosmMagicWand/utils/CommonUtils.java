@@ -425,8 +425,8 @@ public class CommonUtils {
     }
 
     public static Geometry simplifySmoothGeometry(Geometry geometry) {
-        if (ToolSettings.getSimplifyDouglasP() > 0) {
-            geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplifyDouglasP());
+        if (ToolSettings.getSimplDouglasP() > 0) {
+            geometry = CommonUtils.simplifyDouglasP(geometry.copy(), ToolSettings.getSimplDouglasP());
         }
         if (ToolSettings.getSimplPolygonHull() > 0) {
             geometry = CommonUtils.simplifyPolygonHull(geometry.copy(), ToolSettings.getSimplPolygonHull());
