@@ -10,6 +10,7 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImageGrid;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.Arrays;
 
@@ -18,55 +19,59 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListener {
     // variables
     private SamImageGrid samImageGrid;
-
+    private JPanel mainJpanel;
     public MagicWandDialog() {
         super(tr("Magic Wand Config"), "magicwand.svg", tr("Open MagicWand windows"), null, 200, false);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        mainJpanel = new JPanel();
+        mainJpanel.setLayout(new BoxLayout(mainJpanel, BoxLayout.Y_AXIS));
+
+        JPanel optionPanel = new JPanel();
+        optionPanel.setLayout(new GridLayout(5, 1, 3, 3));
         // tolerance
-        panel.add(buildTolerancePanel());
+        optionPanel.add(buildTolerancePanel());
         // simplify
-        panel.add(buildPolygonHullPanel());
-        panel.add(buildDouglaspPanel());
-        panel.add(buildTopologyPreservingPanel());
-        panel.add(buildChaikinAnglePanel());
-        panel.add(buildSamImagesPanel());
+        optionPanel.add(buildPolygonHullPanel());
+        optionPanel.add(buildDouglaspPanel());
+        optionPanel.add(buildTopologyPreservingPanel());
+        optionPanel.add(buildChaikinAnglePanel());
+        // add mainJpanel
+        mainJpanel.add(optionPanel);
+        // sam image
+
+        mainJpanel.add(buildSamImagesPanel());
         //  buttons
         //  add
         SideButton addTagButton = new SideButton(new AutoAddTagAction());
         // sam
         SideButton samButton = new SideButton(new SamEncondeAction(this));
 
-        createLayout(panel, true, Arrays.asList(addTagButton, samButton));
+        createLayout(mainJpanel, true, Arrays.asList(addTagButton, samButton));
     }
 
 
     private JPanel buildTolerancePanel() {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
-        //
+        jpanel.setPreferredSize(new Dimension(0,25));
         int initValue = 9;
-        JLabel toleranceJLabel = new JLabel();
-        toleranceJLabel.setText("Tolerance:  " + initValue);
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Tolerance:  " + initValue);
+        jpanel.setBorder(titledBorder);
         ToolSettings.setTolerance(initValue);
-        jpanel.add(toleranceJLabel);
         //
         JSlider jSlider = new JSlider(1, 30, initValue);
         jSlider.setPaintTrack(true);
         jSlider.setPaintTicks(true);
         jSlider.setPaintLabels(true);
-        jSlider.setMajorTickSpacing(5);
-        jSlider.setMinorTickSpacing(0);
 
         jpanel.add(jSlider);
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
             int value = source.getValue();
-            toleranceJLabel.setText(tr("Tolerance:  " + value));
+            titledBorder.setTitle(tr("Tolerance:  " + value));
             ToolSettings.setTolerance(value);
+            jpanel.repaint();
         });
-        jpanel.add(new JSeparator());
 
         return jpanel;
     }
@@ -74,15 +79,16 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     private JPanel buildPolygonHullPanel() {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
+        jpanel.setPreferredSize(new Dimension(0,25));
         //
-        JLabel simplPolygonHullJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
         double min = 0.5;
         int initValue = (int) (0.95 * decimalPlaces);
         //
-        simplPolygonHullJLabel.setText("Exterior contour:  " + initValue / decimalPlaces);
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Exterior contour:  " + initValue / decimalPlaces);
+        jpanel.setBorder(titledBorder);
+
         ToolSettings.setSimplPolygonHull(initValue / decimalPlaces);
-        jpanel.add(simplPolygonHullJLabel);
         //
         JSlider jSlider = new JSlider((int) (min * decimalPlaces), (int) decimalPlaces, initValue);
         jSlider.setPaintTrack(true);
@@ -99,10 +105,11 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
                 value /= decimalPlaces;
             }
 
-            simplPolygonHullJLabel.setText(tr("Exterior contour: " + value));
+            titledBorder.setTitle(tr("Exterior contour: " + value));
             ToolSettings.setSimplPolygonHull(value);
+            jpanel.repaint();
         });
-        jpanel.add(new JSeparator());
+
 
         return jpanel;
     }
@@ -111,13 +118,12 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        JLabel simplDouglaspJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
         int initValue = 1000;
         //
-        simplDouglaspJLabel.setText("Vertices:  " + initValue / decimalPlaces);
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Vertices:  " + initValue / decimalPlaces);
+        jpanel.setBorder(titledBorder);
         ToolSettings.setSimplDouglasP(initValue / decimalPlaces);
-        jpanel.add(simplDouglaspJLabel);
         //
         JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
@@ -128,10 +134,11 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
             double value = source.getValue() / decimalPlaces;
-            simplDouglaspJLabel.setText(tr("Vertices: " + value));
+            titledBorder.setTitle(tr("Vertices: " + value));
             ToolSettings.setSimplDouglasP(value);
+            jpanel.repaint();
         });
-        jpanel.add(new JSeparator());
+
 
         return jpanel;
     }
@@ -140,13 +147,12 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
         //
-        JLabel simplTopologyPreservingJLabel = new JLabel();
         double decimalPlaces = Math.pow(10, 3);
         int initValue = 1000;
         //
-        simplTopologyPreservingJLabel.setText("Topology:  " + initValue / decimalPlaces);
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Topology:  " + initValue / decimalPlaces);
+        jpanel.setBorder(titledBorder);
         ToolSettings.setSimplTopologyPreserving(initValue / decimalPlaces);
-        jpanel.add(simplTopologyPreservingJLabel);
         //
         JSlider jSlider = new JSlider(0, (int) (5 * decimalPlaces), initValue);
         jSlider.setPaintTrack(true);
@@ -157,10 +163,11 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         jSlider.addChangeListener(changeEvent -> {
             JSlider source = (JSlider) changeEvent.getSource();
             double value = source.getValue() / decimalPlaces;
-            simplTopologyPreservingJLabel.setText(tr("Topology: " + value));
+            titledBorder.setTitle(tr("Topology: " + value));
             ToolSettings.setSimplTopologyPreserving(value);
+            jpanel.repaint();
         });
-        jpanel.add(new JSeparator());
+
 
         return jpanel;
     }
@@ -171,10 +178,10 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         //
         int initValue = 110;
         double minValue = 20.0;
-        JLabel chaikinSmootherAngleJLabel = new JLabel();
-        chaikinSmootherAngleJLabel.setText("Smooth Angle:  " + initValue);
+        //
+        TitledBorder titledBorder = BorderFactory.createTitledBorder("Smooth Angle:  " + initValue);
+        jpanel.setBorder(titledBorder);
         ToolSettings.setChaikinSmooAngle(initValue);
-        jpanel.add(chaikinSmootherAngleJLabel);
         //
         JSlider jSlider = new JSlider((int) minValue, 170, initValue);
         jSlider.setPaintTrack(true);
@@ -188,22 +195,20 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
             if (value <= minValue) {
                 value = 0.0;
             }
-            chaikinSmootherAngleJLabel.setText(tr("Smooth Angle: " + value));
+            titledBorder.setTitle(tr("Smooth Angle: " + value));
             ToolSettings.setChaikinSmooAngle(value);
+            jpanel.repaint();
         });
-        jpanel.add(new JSeparator());
+
 
         return jpanel;
     }
 
-    private JScrollPane buildSamImagesPanel() {
-        samImageGrid = new SamImageGrid();
-        JScrollPane scrollPane = new JScrollPane(samImageGrid);
-        scrollPane.setMinimumSize(new Dimension(200,300));
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+    private JPanel buildSamImagesPanel() {
+        samImageGrid = new SamImageGrid(130);
+        samImageGrid.setLayout(new GridLayout(0, 2, 2, 3));
 
-        return scrollPane;
+        return samImageGrid;
     }
 
 

@@ -1,80 +1,64 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
+import org.openstreetmap.josm.data.ProjectionBounds;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.gui.MapView;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import okhttp3.OkHttpClient;
 
 public class SamImage {
     private MapView mapView;
     private BufferedImage layerImage;
-
-    public ImageIcon getImageIcon() {
-        return imageIcon;
-    }
-
+    private Graphics g;
     private ImageIcon imageIcon;
-    private String bbox;
+    private ProjectionBounds bbox;
     //    encode
     private String encodeImage;
     private String base64Image;
     private int encodeStatus;
+    private EastNorth center;
+    private double zoom;
 
     public SamImage(MapView mapView, BufferedImage layerImage) {
         this.mapView = mapView;
         this.layerImage = layerImage;
         this.base64Image = CommonUtils.encodeImageToBase64(layerImage);
         this.imageIcon = new ImageIcon(layerImage);
-    }
+        this.center = mapView.getCenter();
+        this.g = mapView.getGraphics();
 
-    public MapView getMapView() {
-        return mapView;
-    }
+//        LatLon northwest = mapView.getLatLon(0, 0);
+//        LatLon southeast = mapView.getLatLon(mapView.getWidth(), mapView.getHeight());
+//        this.bbox = new Bounds(northwest, southeast);
+        this.bbox = mapView.getProjectionBounds();
 
-    public void setMapView(MapView mapView) {
-        this.mapView = mapView;
+
     }
 
     public BufferedImage getLayerImage() {
         return layerImage;
     }
 
-    public void setLayerImage(BufferedImage layerImage) {
-        this.layerImage = layerImage;
+    public void drawLatLonCrosshair(MapView mapView) {
+        System.out.println("draw");
     }
 
-    public String getBbox() {
+    public EastNorth getCenter() {
+        return center;
+    }
+
+    public ProjectionBounds getBbox() {
         return bbox;
     }
 
-    public void setBbox(String bbox) {
-        this.bbox = bbox;
+    public double getZoom() {
+        return zoom;
     }
 
-    public String getEncodeImage() {
-        return encodeImage;
+    public void setEncodeImage() {
+
     }
-
-    public void setEncodeImage(String encodeImage) {
-        this.encodeImage = encodeImage;
-    }
-
-    public String getBase64Image() {
-        return base64Image;
-    }
-
-    public void setBase64Image(String base64Image) {
-        this.base64Image = base64Image;
-    }
-
-    public int getEncodeStatus() {
-        return encodeStatus;
-    }
-
-    public void setEncodeStatus(int encodeStatus) {
-        this.encodeStatus = encodeStatus;
-    }
-//  decode
-
-
 }
