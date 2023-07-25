@@ -1,5 +1,4 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -7,6 +6,7 @@ import okhttp3.Response;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
@@ -74,20 +74,18 @@ public class SamImage {
     public void setEncodeImage() {
         try {
             OkHttpClient client = new OkHttpClient();
-            String url = "";
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
+
+            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
+
+            Request request = new Request.Builder().url(url).get().build();
             Response response = client.newCall(request).execute();
 
             String responseData = response.body().string();
             Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
             // add fields
             imageEmbedding = (String) dataMap.getOrDefault("image_embeddings", "");
-            System.out.println("Valor obtenido: " + imageEmbedding);
+            Logging.info("Value: " + imageEmbedding);
             isEncodeImage = true;
-
         } catch (Exception e) {
             Logging.error(e);
             isEncodeImage = false;
