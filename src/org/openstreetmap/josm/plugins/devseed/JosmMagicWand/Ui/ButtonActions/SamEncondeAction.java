@@ -3,11 +3,12 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions;
 import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -28,7 +29,30 @@ public class SamEncondeAction extends JosmAction {
         MapView mapView = MainApplication.getMap().mapView;
         BufferedImage bufferedImage = getLayeredImage(mapView);
         SamImage samImage = new SamImage(mapView, bufferedImage);
-        listener.onAddSamImage(samImage);
+        // effect
+        setEnabled(false);
+        apiThread(samImage);
+
+    }
+
+    private void apiThread(SamImage samImage) {
+        Thread apiThread = new Thread(() -> {
+            samImage.setEncodeImage();
+            SwingUtilities.invokeLater(() -> {
+                setEnabled(true);
+                addSamImage(samImage);
+            });
+        });
+        apiThread.start();
+    }
+
+    private void addSamImage(SamImage samImage) {
+        if (samImage.isEncodeImage()) {
+            new Notification(tr("Added a sam image.")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            listener.onAddSamImage(samImage);
+        } else {
+            new Notification(tr("Error adding sam image.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+        }
     }
 
     private BufferedImage getLayeredImage(MapView mapView) {

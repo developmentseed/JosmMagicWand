@@ -88,7 +88,7 @@ public class ImagePanel extends JPanel {
     private void zoomAction() {
         MapView mapView = MainApplication.getMap().mapView;
         System.out.println("click zoom");
-        mapView.zoomTo(samImage.getBbox());
+        mapView.zoomTo(samImage.getProjectionBounds());
         mapView.zoomTo(samImage.getCenter());
     }
 

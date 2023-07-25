@@ -34,8 +34,7 @@ public class SamImageGrid extends JPanel {
     private void updateJpanel() {
         removeAll();
         for (SamImage samImage : samImageList) {
-            JPanel panelSamImage = new ImagePanel(samImage, this.maxWidth);
-            add(panelSamImage);
+            add(new ImagePanel(samImage, this.maxWidth));
         }
         revalidate();
         repaint();
