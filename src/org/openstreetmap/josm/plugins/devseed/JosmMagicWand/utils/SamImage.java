@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class SamImage {
     private MapView mapView;
@@ -70,10 +71,12 @@ public class SamImage {
         return isEncodeImage;
     }
 
-
     public void setEncodeImage() {
         try {
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build();
 
             String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
 
