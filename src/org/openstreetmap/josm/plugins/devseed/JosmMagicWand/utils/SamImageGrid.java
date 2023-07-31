@@ -1,5 +1,7 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
+import org.locationtech.jts.geom.Point;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -22,6 +24,19 @@ public class SamImageGrid extends JPanel {
     public void removeAllSamImage() {
         samImageList.clear();
         updateJpanel();
+    }
+
+    public ArrayList<SamImage> getSamImageList() {
+        return samImageList;
+    }
+
+    public SamImage getSamImageIncludepoint(Point p) {
+        for (SamImage s : samImageList) {
+            if (s.containsPoint(p)) {
+                return s;
+            }
+        }
+        return null;
     }
 
     public void removeSamImage(int index) {

@@ -1,16 +1,14 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import org.locationtech.jts.algorithm.Angle;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
 import org.openstreetmap.josm.command.AddCommand;
@@ -254,6 +252,8 @@ public class CommonUtils {
         Collection<Command> cmds = new LinkedList<>();
         Projection projection = ProjectionRegistry.getProjection();
         for (Geometry geometry : geometries) {
+            if(geometry instanceof MultiPolygon) continue;
+
             Way w = new Way();
             List<Node> nodes = coordinates2Nodes(List.of(geometry.getCoordinates()), projection);
             int index = 0;

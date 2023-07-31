@@ -11,6 +11,7 @@ import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MagicWandAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SamDecodeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.MagicWandDialog;
 import org.openstreetmap.josm.tools.Logging;
@@ -44,9 +45,10 @@ public class MainJosmMagicWandPlugin extends Plugin {
     @Override
     public void mapFrameInitialized(MapFrame oldFrame, MapFrame newFrame) {
         if (oldFrame == null && newFrame != null) {
-            newFrame.addToggleDialog( new MagicWandDialog());
+            MagicWandDialog magicWandDialog = new MagicWandDialog();
+            newFrame.addToggleDialog(magicWandDialog);
             MainApplication.getMap().addMapMode(new IconToggleButton(new MagicWandAction()));
-
+            MainApplication.getMap().addMapMode(new IconToggleButton(new SamDecodeAction(magicWandDialog)));
         }
     }
     public static Dotenv getDotenv() {

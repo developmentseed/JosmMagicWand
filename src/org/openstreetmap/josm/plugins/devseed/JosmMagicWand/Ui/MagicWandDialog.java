@@ -1,5 +1,8 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
@@ -12,6 +15,7 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImageGrid;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -220,5 +224,19 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     @Override
     public void onRemoveAll() {
         samImageGrid.removeAllSamImage();
+    }
+
+    @Override
+    public ArrayList<SamImage> getSamImageList() {
+        return samImageGrid.getSamImageList();
+    }
+
+    @Override
+    public SamImage getSamImageIncludepoint(double x, double y) {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate coordinate = new Coordinate(x, y);
+        Point point = geometryFactory.createPoint(coordinate);
+
+        return samImageGrid.getSamImageIncludepoint(point);
     }
 }
