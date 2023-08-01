@@ -139,30 +139,35 @@ public class SamDecodeAction extends MapMode implements MouseListener {
 
 
         SamImage samImage = listener.getSamImageIncludepoint(eastNorth.getX(), eastNorth.getY());
-        if (samImage != null) {
-            List<Geometry> geometriesSam = samImage.fetchDecodePoint(eastNorth.getX(), eastNorth.getY());
-            System.out.println("geometriesSam size " + geometriesSam.size());
-            List<Geometry> geometriesMercator = new ArrayList<>();
-            Projection projectionSam = Projections.getProjectionByCode("EPSG:4326");
-            for (Geometry geoSam : geometriesSam) {
-                List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(
-                        CommonUtils.coordinates2Nodes(Arrays.asList(geoSam.getCoordinates()), projectionSam));
-
-                Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
-                geometriesMercator.add(geometryMercator);
-            }
-
-            Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesMercator, tagKey, tagValue);
-
-            UndoRedoHandler.getInstance().add(new SequenceCommand(tr("generate sam ways"), cmds));
-            return !cmds.isEmpty();
-
-        } else {
+        if (samImage == null) {
             new Notification(tr("Click inside of active AOI to enable Segment Anything Model.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return false;
         }
 
-        return false;
+        Geometry geometrySam = samImage.fetchDecodePoint(eastNorth.getX(), eastNorth.getY());
+        if (geometrySam == null) {
+            new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return false;
+        }
+
+        Projection projectionSam = Projections.getProjectionByCode("EPSG:4326");
+
+        List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(
+                CommonUtils.coordinates2Nodes(Arrays.asList(geometrySam.getCoordinates()), projectionSam));
+
+        Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
+
+        List<Geometry> geometriesMercator = new ArrayList<>();
+
+        geometriesMercator.add(geometryMercator);
+
+        Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesMercator, tagKey, tagValue);
+
+        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("generate sam ways"), cmds));
+        return !cmds.isEmpty();
+
     }
-
-
 }
+
+
+

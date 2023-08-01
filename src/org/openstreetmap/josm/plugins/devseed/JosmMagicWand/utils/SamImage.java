@@ -16,10 +16,8 @@ import org.openstreetmap.josm.tools.Logging;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SamImage {
@@ -95,6 +93,7 @@ public class SamImage {
 
             String responseData = response.body().string();
             Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
+            crs = (String) dataMap.get("crs");
             bbox = (List<Double>) dataMap.get("bbox");
             imageShape = (List<Integer>) dataMap.get("image_shape");
             bboxPolygon = createPolygonFromDoubles((List<Double>) dataMap.get("bbox"));
@@ -144,8 +143,7 @@ public class SamImage {
         return false;
     }
 
-    public List<Geometry> fetchDecodePoint(double x, double y) {
-        List<Geometry> geometryList = new ArrayList<>();
+    public Geometry fetchDecodePoint(double x, double y) {
         GeoJsonReader reader = new GeoJsonReader();
 
         try {
@@ -153,58 +151,36 @@ public class SamImage {
             OkHttpClient client = new OkHttpClient();
             ObjectMapper objectMapper = new ObjectMapper();
             Coordinate clickCoordinate = mouseClick2Coordinate(x, y);
-            EncondeRequestBody requestBodyData = new EncondeRequestBody(
-                    bbox, imageEmbedding, imageShape, 1, Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y), 15
-            );
+            EncondeRequestBody requestBodyData = new EncondeRequestBody(bbox, imageEmbedding, imageShape, 1, Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y), 15, crs);
             String requestBodyJson = objectMapper.writeValueAsString(requestBodyData);
 
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
             Request request = new Request.Builder()
                     .url(url)
                     .post(requestBody)
                     .build();
 
             Response response = client.newCall(request).execute();
-            System.out.println("======");
-
-            System.out.println(requestBodyData.getBbox());
-            System.out.println(requestBodyData.getImage_shape());
-            System.out.println(requestBodyData.getInput_point());
-
-            System.out.println("======");
 
             if (response.isSuccessful()) {
                 String responseData = response.body().string();
                 Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
                 if (dataMap.getOrDefault("status", "").equals("success")) {
                     List<String> geojsonsList = (List<String>) dataMap.get("geojsons");
-                    for (String geojson : geojsonsList) {
-                        Geometry geom = reader.read(geojson);
-//                        if (geom instanceof MultiPolygon) {
-//                            for (int i = 0; i < geom.getNumGeometries(); i++) {
-//                                Geometry polygon = geom.getGeometryN(i);
-//                                geometryList.add(polygon);
-//                            }
-//                        } else {
-//                            geometryList.add(geom);
-//                        }
-                        if (geom instanceof Polygon) {
-                            geometryList.add(geom);
-
-                        }
-                    }
+                    List<Double> geojsonConfidence = (List<Double>) dataMap.get("confidence_scores");
+                    Double maxVal = Collections.max(geojsonConfidence);
+                    Integer maxIdx = geojsonConfidence.indexOf(maxVal);
+                    return reader.read(geojsonsList.get(maxIdx));
                 }
-
-            } else {
-                System.out.println("Error en la solicitud: " + response.code() + " " + response.message());
             }
 
         } catch (Exception e) {
             Logging.error(e);
             isEncodeImage = false;
         }
-        return geometryList;
+        return null;
 
 
     }
@@ -222,9 +198,12 @@ public class SamImage {
         //  factor (nx, ny)
         double nx = (x - minX) / (maxX - minX);
         double ny = (y - minY) / (maxY - minY);
-
-        return new Coordinate(nx * bboxWidth, ny * bboxHeight);
+        // Y i invert
+        return new Coordinate(nx * bboxWidth, (1 - ny) * bboxHeight);
     }
 
+    public List<Double> getBoox() {
+        return bbox;
+    }
 
 }

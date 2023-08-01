@@ -11,9 +11,9 @@ public class EncondeRequestBody {
     private List<Integer> input_point;
     private double zoom;
 
-    public EncondeRequestBody(List<Double> bbox,  String image_embeddings, List<Integer> image_shape, int input_label, List<Integer> input_point, double zoom) {
+    public EncondeRequestBody(List<Double> bbox,  String image_embeddings, List<Integer> image_shape, int input_label, List<Integer> input_point, double zoom, String crs) {
         this.bbox = bbox;
-        this.crs="EPSG:3857";
+        this.crs=crs;
         this.image_embeddings = image_embeddings;
         this.image_shape = image_shape;
         this.input_label = input_label;
