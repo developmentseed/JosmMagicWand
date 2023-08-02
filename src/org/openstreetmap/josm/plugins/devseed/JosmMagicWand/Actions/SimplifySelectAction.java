@@ -32,7 +32,7 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
 
 
     public SimplifySelectAction() {
-        super(tr("Simplify way"), "mapmode/magic-wand-merge", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
+        super(tr("Simplify way"), "mapmode/magic-wand-simplify", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
     }
 
     @Override

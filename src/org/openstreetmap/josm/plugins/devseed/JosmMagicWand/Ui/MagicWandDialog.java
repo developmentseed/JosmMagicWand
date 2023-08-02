@@ -25,7 +25,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     private SamImageGrid samImageGrid;
     private JPanel mainJpanel;
     public MagicWandDialog() {
-        super(tr("Magic Wand Config"), "magicwand.svg", tr("Open MagicWand windows"), null, 200, false);
+        super(tr("Magic Wand"), "magicwand-info.svg", tr("Open MagicWand windows"), null, 200, false);
 
         mainJpanel = new JPanel();
         mainJpanel.setLayout(new BoxLayout(mainJpanel, BoxLayout.Y_AXIS));

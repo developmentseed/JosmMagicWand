@@ -67,7 +67,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
 
 
     public MagicWandAction() {
-        super(tr("MAgic Wand action "), "magic-wand", tr("Magic wand add"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
+        super(tr("Magic Wand"), "magic-wand", tr("Magic wand"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
 
     }
 

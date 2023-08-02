@@ -12,7 +12,7 @@ public class AutoAddTagAction extends JosmAction {
     AtomicBoolean isPerforming = new AtomicBoolean(false);
 
     public AutoAddTagAction() {
-        super(tr("Add"), "dialogs/add", tr("Add a new key/value pair to geometries"),
+        super(tr("Add tag"), "dialogs/add", tr("Add a new key/value tag to geometries"),
                 null, false);
     }
 

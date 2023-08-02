@@ -22,7 +22,7 @@ public class SamEncondeAction extends JosmAction {
     private ImageSamPanelListener listener;
 
     public SamEncondeAction(ImageSamPanelListener listener) {
-        super(tr("Sam"), "dialogs/add", tr("Add a new key/value pair to geometries"),
+        super(tr("SAM AOI"), "dialogs/magic-wand-encode", tr("Add a new SAM AOI"),
                 null, false);
         this.listener = listener;
     }

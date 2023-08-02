@@ -34,8 +34,8 @@ import java.util.List;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class SamDecodeAction extends MapMode implements MouseListener {
-    private static final Cursor CURSOR_CUSTOM = ImageProvider.getCursor("crosshair", "magic-wand");
-    private static final Cursor CURSOR_ADD = ImageProvider.getCursor("crosshair", "magic-wand-add");
+    private static final Cursor CURSOR_CUSTOM = ImageProvider.getCursor("crosshair", "magic-wand-sam");
+
 
     private enum Mode {
         None, Drawing
@@ -48,19 +48,11 @@ public class SamDecodeAction extends MapMode implements MouseListener {
     private ImageSamPanelListener listener;
 
     public SamDecodeAction(ImageSamPanelListener listener) {
-        super(tr("SAM action"), "magic-wand", tr("SAM  add"), null, ImageProvider.getCursor("crosshair", null));
+        super(tr("Magic Wand SAM"), "magic-wand-sam", tr("Magic Wand SAM action"), null, ImageProvider.getCursor("crosshair", null));
         this.listener = listener;
     }
 
     private Cursor getCursor() {
-        try {
-            if (ctrl) {
-                return CURSOR_ADD;
-            }
-
-        } catch (Exception e) {
-            Logging.error(e);
-        }
         return CURSOR_CUSTOM;
     }
 
