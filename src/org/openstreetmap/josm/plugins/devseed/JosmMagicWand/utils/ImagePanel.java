@@ -10,6 +10,7 @@ import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
 import java.awt.*;
@@ -129,7 +130,7 @@ public class ImagePanel extends JPanel {
                 UndoRedoHandler.getInstance().add(new SequenceCommand(tr("generate sam ways"), cmds));
 
             } catch (Exception e) {
-                System.out.println(e);
+                Logging.error(e);
             }
 
         } else {

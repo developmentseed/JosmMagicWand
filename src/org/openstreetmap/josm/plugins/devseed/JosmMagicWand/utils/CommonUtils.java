@@ -7,8 +7,8 @@ import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
-import org.opencv.core.*;
 import org.opencv.core.Point;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
 import org.openstreetmap.josm.command.AddCommand;
@@ -52,14 +52,18 @@ public class CommonUtils {
         return image;
     }
 
-    public static void bufferedImageSaveFile(BufferedImage image, String filePath) throws Exception {
-        File oupFile = new File(filePath);
-        int index = filePath.lastIndexOf('.');
-        String extension = "jpg";
-        if (index > 0) {
-            extension = filePath.substring(index + 1);
+    public static void bufferedImageSaveFile(BufferedImage image, String filePath) {
+        try {
+            File oupFile = new File(filePath);
+            int index = filePath.lastIndexOf('.');
+            String extension = "jpg";
+            if (index > 0) {
+                extension = filePath.substring(index + 1);
+            }
+            ImageIO.write(image, extension, oupFile);
+        } catch (Exception e) {
+            Logging.error("Exception " + e + " save image");
         }
-        ImageIO.write(image, extension, oupFile);
     }
 
     public static BufferedImage convertColorspace(BufferedImage image, int newType) {

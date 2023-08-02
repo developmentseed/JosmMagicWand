@@ -118,11 +118,18 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         Logging.info("-------- mouseReleased -----------");
         if (e.getButton() != MouseEvent.BUTTON1) return;
         if (!MainApplication.getMap().mapView.isActiveLayerDrawable()) return;
-        try {
-            drawWays(e);
-        } catch (Exception ex) {
-            Logging.error(ex);
-        }
+
+        Thread apiThread = new Thread(() -> {
+            try {
+                drawWays(e);
+            } catch (Exception ex) {
+                Logging.error(ex);
+            }
+            SwingUtilities.invokeLater(() -> {
+                System.out.println("later");
+            });
+        });
+        apiThread.start();
     }
 
     private boolean drawWays(MouseEvent e) throws Exception {

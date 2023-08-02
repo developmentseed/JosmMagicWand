@@ -1,6 +1,7 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions;
 
 import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
@@ -41,7 +42,8 @@ public class SamEncondeAction extends JosmAction {
 
         if (hasMapLayer) {
             BufferedImage bufferedImage = getLayeredImage(mapView);
-            SamImage samImage = new SamImage(mapView, bufferedImage);
+
+            SamImage samImage = new SamImage(mapView.getProjectionBounds(), bufferedImage);
             // effect
             setEnabled(false);
             apiThread(samImage);

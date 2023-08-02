@@ -2,61 +2,56 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
-import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class SamImage {
-    private MapView mapView;
     private BufferedImage layerImage;
-    private Graphics g;
     private ImageIcon imageIcon;
     private ProjectionBounds projectionBounds;
-    private ProjectionBounds projectionApi;
-
     //    encode
     private String base64Image;
-    private int encodeStatus;
+
     private EastNorth center;
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     // enconde fields
     private boolean isEncodeImage = false;
-
     private List<Integer> imageShape;
-    private int inputLabel;
-    private String crs;
+    private String crs = "EPSG:3857";
     private List<Double> bbox;
-    private double zoom;
     private String imageEmbedding;
     private Polygon bboxPolygon;
 
-    public SamImage(MapView mapView, BufferedImage layerImage) {
-        this.mapView = mapView;
+    public SamImage(ProjectionBounds projectionBounds, BufferedImage layerImage) {
+        //  image
         this.layerImage = layerImage;
         this.base64Image = CommonUtils.encodeImageToBase64(layerImage);
         this.imageIcon = new ImageIcon(layerImage);
-        this.center = mapView.getCenter();
-        this.g = mapView.getGraphics();
-//        LatLon northwest = mapView.getLatLon(0, 0);
-//        LatLon southeast = mapView.getLatLon(mapView.getWidth(), mapView.getHeight());
-//        this.bbox = new Bounds(northwest, southeast);
-        this.projectionBounds = mapView.getProjectionBounds();
+        // create imageShape
+        this.imageShape = new ArrayList<>(Arrays.asList(
+                layerImage.getHeight(), layerImage.getWidth()
+        ));
 
-        objectMapper = new ObjectMapper();
+        // projectionBounds
+        this.center = projectionBounds.getCenter();
+        this.projectionBounds = projectionBounds;
+        // create bbox
+        this.bbox = new ArrayList<>(Arrays.asList(
+                projectionBounds.getMin().getX(),
+                projectionBounds.getMin().getY(),
+                projectionBounds.getMax().getX(),
+                projectionBounds.getMax().getY()));
+        this.bboxPolygon = createPolygonFromDoubles(this.bbox);
     }
 
     public BufferedImage getLayerImage() {
@@ -72,7 +67,7 @@ public class SamImage {
     }
 
     public ProjectionBounds getProjectionBounds() {
-        return projectionApi;
+        return projectionBounds;
     }
 
     public boolean isEncodeImage() {
@@ -81,27 +76,30 @@ public class SamImage {
 
     public void setEncodeImage() {
         try {
+            // request body
+            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(base64Image);
+            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
+            //    client
             OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .connectTimeout(3, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS)
                     .build();
 
             String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
 
-            Request request = new Request.Builder().url(url).get().build();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+            // response
             Response response = client.newCall(request).execute();
 
             String responseData = response.body().string();
             Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
-            crs = (String) dataMap.get("crs");
-            bbox = (List<Double>) dataMap.get("bbox");
-            imageShape = (List<Integer>) dataMap.get("image_shape");
-            bboxPolygon = createPolygonFromDoubles((List<Double>) dataMap.get("bbox"));
-            EastNorth northwest = new EastNorth(bbox.get(0), bbox.get(1));
-            EastNorth southeast = new EastNorth(bbox.get(2), bbox.get(3));
-
-            projectionApi = new ProjectionBounds(northwest, southeast);
-            // add fields
+            // get fields
             imageEmbedding = (String) dataMap.getOrDefault("image_embeddings", "");
             isEncodeImage = true;
         } catch (Exception e) {
@@ -112,16 +110,6 @@ public class SamImage {
     }
 
     public Polygon createPolygonFromDoubles(List<Double> coordinates) {
-        if (coordinates.size() != 4) {
-            Logging.error("The coordinate array must contain exactly 4 values.");
-            LatLon northwest = mapView.getLatLon(0, 0);
-            LatLon southeast = mapView.getLatLon(mapView.getWidth(), mapView.getHeight());
-            coordinates = new ArrayList<>();
-            coordinates.add(northwest.getX());
-            coordinates.add(northwest.getY());
-            coordinates.add(southeast.getX());
-            coordinates.add(southeast.getY());
-        }
         Coordinate[] vertices = {
                 new Coordinate(coordinates.get(0), coordinates.get(1)),
                 new Coordinate(coordinates.get(0), coordinates.get(3)),
@@ -134,28 +122,27 @@ public class SamImage {
         return geometryFactory.createPolygon(vertices);
     }
 
-    public boolean containsPoint(Point p) {
-        try {
-            return bboxPolygon.contains(p);
-        } catch (Exception e) {
-            Logging.error(e);
-        }
-        return false;
-    }
-
     public Geometry fetchDecodePoint(double x, double y) {
         GeoJsonReader reader = new GeoJsonReader();
+        String url = MainJosmMagicWandPlugin.getDotenv().get("DECODE_URL");
 
         try {
-            String url = MainJosmMagicWandPlugin.getDotenv().get("DECODE_URL");
-            OkHttpClient client = new OkHttpClient();
-            ObjectMapper objectMapper = new ObjectMapper();
-            Coordinate clickCoordinate = mouseClick2Coordinate(x, y);
-            EncondeRequestBody requestBodyData = new EncondeRequestBody(bbox, imageEmbedding, imageShape, 1, Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y), 15, crs);
-            String requestBodyJson = objectMapper.writeValueAsString(requestBodyData);
 
+            // request body
+            Coordinate clickCoordinate = mouseClick2Coordinate(x, y);
+
+            DecondeRequestBody decodeRequestBody = new DecondeRequestBody(bbox, imageEmbedding, imageShape, 1, Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y), 15, crs);
+            String requestBodyJson = objectMapper.writeValueAsString(decodeRequestBody);
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
+            //    client
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(3, TimeUnit.SECONDS)
+                    .readTimeout(3, TimeUnit.SECONDS)
+                    .build();
+
 
             Request request = new Request.Builder()
                     .url(url)
@@ -178,11 +165,8 @@ public class SamImage {
 
         } catch (Exception e) {
             Logging.error(e);
-            isEncodeImage = false;
         }
         return null;
-
-
     }
 
     public Coordinate mouseClick2Coordinate(double x, double y) {
@@ -206,4 +190,12 @@ public class SamImage {
         return bbox;
     }
 
+    public boolean containsPoint(Point p) {
+        try {
+            return bboxPolygon.contains(p);
+        } catch (Exception e) {
+            Logging.error(e);
+        }
+        return false;
+    }
 }
