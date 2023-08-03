@@ -75,37 +75,39 @@ public class SamImage {
     }
 
     public void setEncodeImage() {
-        try {
-            // request body
-            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(base64Image);
-            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
-
-            //    client
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(3, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .build();
-
-            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(requestBody)
-                    .build();
-            // response
-            Response response = client.newCall(request).execute();
-
-            String responseData = response.body().string();
-            Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
-            // get fields
-            imageEmbedding = (String) dataMap.getOrDefault("image_embeddings", "");
-            isEncodeImage = true;
-        } catch (Exception e) {
-            Logging.error(e);
-            isEncodeImage = false;
-        }
+        isEncodeImage = true;
+        return;
+//        try {
+//            // request body
+//            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(base64Image);
+//            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
+//            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+//            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+//
+//            //    client
+//            OkHttpClient client = new OkHttpClient.Builder()
+//                    .connectTimeout(3, TimeUnit.SECONDS)
+//                    .readTimeout(30, TimeUnit.SECONDS)
+//                    .build();
+//
+//            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
+//
+//            Request request = new Request.Builder()
+//                    .url(url)
+//                    .post(requestBody)
+//                    .build();
+//            // response
+//            Response response = client.newCall(request).execute();
+//
+//            String responseData = response.body().string();
+//            Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
+//            // get fields
+//            imageEmbedding = (String) dataMap.getOrDefault("image_embedding", "");
+//            isEncodeImage = true;
+//        } catch (Exception e) {
+//            Logging.error(e);
+//            isEncodeImage = false;
+//        }
 
     }
 
