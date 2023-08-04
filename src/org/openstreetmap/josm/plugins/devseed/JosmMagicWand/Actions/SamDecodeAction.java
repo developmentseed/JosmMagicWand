@@ -116,6 +116,7 @@ public class SamDecodeAction extends MapMode implements MouseListener {
                 drawWays(e);
             } catch (Exception ex) {
                 Logging.error(ex);
+                new Notification(tr("Error data generation.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             }
             SwingUtilities.invokeLater(() -> {
                 System.out.println("later");
@@ -153,6 +154,10 @@ public class SamDecodeAction extends MapMode implements MouseListener {
 
         List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(
                 CommonUtils.coordinates2Nodes(Arrays.asList(geometrySam.getCoordinates()), projectionSam));
+        if (coordsMercator.isEmpty()) {
+            new Notification(tr("No Geometries response.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return false;
+        }
 
         Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
 

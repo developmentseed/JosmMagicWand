@@ -1,7 +1,6 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions;
 
 import org.openstreetmap.josm.actions.JosmAction;
-import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
@@ -66,8 +65,10 @@ public class SamEncondeAction extends JosmAction {
 
     private void addSamImage(SamImage samImage) {
         if (samImage.isEncodeImage()) {
-            new Notification(tr("Added a sam image.")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            listener.addLayer();
+            listener.addBboxLayer(samImage.getBboxWay());
             listener.onAddSamImage(samImage);
+            new Notification(tr("Added a sam image.")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         } else {
             new Notification(tr("Error adding sam image.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         }

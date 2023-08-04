@@ -3,14 +3,21 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
+import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.SamEncondeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImageGrid;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -24,6 +31,9 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     // variables
     private SamImageGrid samImageGrid;
     private JPanel mainJpanel;
+    private OsmDataLayer uneditableLayer = null;
+    private boolean canSamAoi = false;
+
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand-info.svg", tr("Open MagicWand windows"), null, 200, false);
 
@@ -44,6 +54,8 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         // sam image
 
         mainJpanel.add(buildSamImagesPanel());
+        // layer
+        initLayer();
         //  buttons
         //  add
         SideButton addTagButton = new SideButton(new AutoAddTagAction());
@@ -52,7 +64,6 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
 
         createLayout(mainJpanel, true, Arrays.asList(addTagButton, samButton));
     }
-
 
     private JPanel buildTolerancePanel() {
         JPanel jpanel = new JPanel();
@@ -215,6 +226,13 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         return samImageGrid;
     }
 
+    private void initLayer() {
+        if (uneditableLayer == null || !MainApplication.getLayerManager().containsLayer(uneditableLayer)) {
+            DataSet bboxDataset = new DataSet();
+            uneditableLayer = new OsmDataLayer(bboxDataset, "Magic Wand Uneditable Layer", null);
+            uneditableLayer.setUploadDiscouraged(false);
+        }
+    }
 
     @Override
     public void onAddSamImage(SamImage samImage) {
@@ -239,4 +257,41 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
 
         return samImageGrid.getSamImageIncludepoint(point);
     }
+
+    @Override
+    public void addLayer() {
+        try {
+            initLayer();
+
+            Layer activeLayer = MainApplication.getLayerManager().getActiveDataLayer();
+            if (activeLayer == null) {
+                activeLayer = new OsmDataLayer(new DataSet(), "Data Layer ", null);
+                MainApplication.getLayerManager().addLayer(activeLayer);
+            }
+            int indexActiveLayer = MainApplication.getLayerManager().getLayers().indexOf(activeLayer);
+
+            if (!MainApplication.getLayerManager().containsLayer(uneditableLayer)) {
+                MainApplication.getLayerManager().addLayer(uneditableLayer);
+                MainApplication.getLayerManager().setActiveLayer(activeLayer);
+            }
+            int indexUneditableLayer = MainApplication.getLayerManager().getLayers().indexOf(uneditableLayer);
+
+            if (indexActiveLayer >= indexUneditableLayer) {
+                MainApplication.getLayerManager().moveLayer(uneditableLayer, indexActiveLayer);
+            }
+        } catch (Exception e) {
+            Logging.error(e);
+        }
+    }
+
+    @Override
+    public void addBboxLayer(Way way) {
+        for (Node node : way.getNodes()) {
+            if (!uneditableLayer.getDataSet().containsNode(node)) {
+                uneditableLayer.getDataSet().addPrimitive(node);
+            }
+        }
+        uneditableLayer.getDataSet().addPrimitive(way);
+    }
+
 }

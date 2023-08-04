@@ -6,6 +6,8 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.Logging;
@@ -31,6 +33,7 @@ public class SamImage {
     private List<Double> bbox;
     private String imageEmbedding;
     private Polygon bboxPolygon;
+    private Way bboxWay;
 
     public SamImage(ProjectionBounds projectionBounds, BufferedImage layerImage) {
         //  image
@@ -52,6 +55,7 @@ public class SamImage {
                 projectionBounds.getMax().getX(),
                 projectionBounds.getMax().getY()));
         this.bboxPolygon = createPolygonFromDoubles(this.bbox);
+        this.bboxWay = createBooxWay();
     }
 
     public BufferedImage getLayerImage() {
@@ -75,39 +79,37 @@ public class SamImage {
     }
 
     public void setEncodeImage() {
-        isEncodeImage = true;
-        return;
-//        try {
-//            // request body
-//            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(base64Image);
-//            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
-//            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-//            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
-//
-//            //    client
-//            OkHttpClient client = new OkHttpClient.Builder()
-//                    .connectTimeout(3, TimeUnit.SECONDS)
-//                    .readTimeout(30, TimeUnit.SECONDS)
-//                    .build();
-//
-//            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
-//
-//            Request request = new Request.Builder()
-//                    .url(url)
-//                    .post(requestBody)
-//                    .build();
-//            // response
-//            Response response = client.newCall(request).execute();
-//
-//            String responseData = response.body().string();
-//            Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
-//            // get fields
-//            imageEmbedding = (String) dataMap.getOrDefault("image_embedding", "");
-//            isEncodeImage = true;
-//        } catch (Exception e) {
-//            Logging.error(e);
-//            isEncodeImage = false;
-//        }
+        try {
+            // request body
+            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(base64Image);
+            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
+            //    client
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(3, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build();
+
+            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+            // response
+            Response response = client.newCall(request).execute();
+
+            String responseData = response.body().string();
+            Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
+            // get fields
+            imageEmbedding = (String) dataMap.getOrDefault("image_embedding", "");
+            isEncodeImage = true;
+        } catch (Exception e) {
+            Logging.error(e);
+            isEncodeImage = false;
+        }
 
     }
 
@@ -199,5 +201,24 @@ public class SamImage {
             Logging.error(e);
         }
         return false;
+    }
+
+    private Way createBooxWay() {
+        Node node1 = new Node(new EastNorth(bbox.get(0), bbox.get(1)));
+        Node node2 = new Node(new EastNorth(bbox.get(0), bbox.get(3)));
+        Node node3 = new Node(new EastNorth(bbox.get(2), bbox.get(3)));
+        Node node4 = new Node(new EastNorth(bbox.get(2), bbox.get(1)));
+
+        Way way = new Way();
+        way.addNode(node1);
+        way.addNode(node2);
+        way.addNode(node3);
+        way.addNode(node4);
+        way.addNode(node1);
+        return way;
+    }
+
+    public Way getBboxWay() {
+        return bboxWay;
     }
 }

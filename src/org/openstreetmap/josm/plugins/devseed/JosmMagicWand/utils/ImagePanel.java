@@ -9,6 +9,7 @@ import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.ImageProvider;
 
 import javax.swing.*;
@@ -48,7 +49,7 @@ public class ImagePanel extends JPanel {
         setPreferredSize(new Dimension(this.maxWidth, this.maxHeight));
         // setup actions
 
-        addLayer();
+//        addLayer();
 
     }
 
@@ -102,45 +103,5 @@ public class ImagePanel extends JPanel {
         mapView.zoomIn();
         mapView.repaint();
     }
-
-    private void addLayer() {
-        DataSet dataSet = new DataSet();
-        Layer activeLayer = MainApplication.getLayerManager().getActiveDataLayer();
-
-        int activeLayerIndex = MainApplication.getLayerManager().getLayers().indexOf(activeLayer);
-        EastNorth center = MainApplication.getMap().mapView.getCenter();
-        double scale = MainApplication.getMap().mapView.getScale();
-
-        List<Double> bbox = samImage.getBoox();
-
-        Node node1 = new Node(new EastNorth(bbox.get(0), bbox.get(1)));
-        Node node2 = new Node(new EastNorth(bbox.get(0), bbox.get(3)));
-        Node node3 = new Node(new EastNorth(bbox.get(2), bbox.get(3)));
-        Node node4 = new Node(new EastNorth(bbox.get(2), bbox.get(1)));
-
-        Way way = new Way();
-        way.addNode(node1);
-        way.addNode(node2);
-        way.addNode(node3);
-        way.addNode(node4);
-        way.addNode(node1);
-        //
-        dataSet.addPrimitive(node1);
-        dataSet.addPrimitive(node2);
-        dataSet.addPrimitive(node3);
-        dataSet.addPrimitive(node4);
-        dataSet.addPrimitive(way);
-
-        OsmDataLayer uneditableLayer = new OsmDataLayer(dataSet, "Uneditable Layer", null);
-        uneditableLayer.setUploadDiscouraged(true);
-
-        MainApplication.getLayerManager().addLayer(uneditableLayer);
-        MainApplication.getLayerManager().moveLayer(uneditableLayer, activeLayerIndex);
-        MainApplication.getLayerManager().setActiveLayer(activeLayer);
-
-
-
-    }
-
 
 }
