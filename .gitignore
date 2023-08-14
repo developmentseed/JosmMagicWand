@@ -43,3 +43,5 @@ bin/
 osmjar/
 
 *.env
+### constants
+#**/**/utils/Constants.java
