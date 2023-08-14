@@ -44,4 +44,4 @@ osmjar/
 
 *.env
 ### constants
-#**/**/utils/Constants.java
+./src/**/utils/Constants.java
