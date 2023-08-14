@@ -3,13 +3,13 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MapView;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
@@ -92,10 +92,8 @@ public class SamImage {
                     .readTimeout(30, TimeUnit.SECONDS)
                     .build();
 
-            String url = MainJosmMagicWandPlugin.getDotenv().get("ENCODE_URL");
-
             Request request = new Request.Builder()
-                    .url(url)
+                    .url(Constants.ENCODE_URL)
                     .post(requestBody)
                     .build();
             // response
@@ -126,9 +124,9 @@ public class SamImage {
         return geometryFactory.createPolygon(vertices);
     }
 
-    public Geometry fetchDecodePoint(double x, double y) {
+    public List<Geometry> fetchDecodePoint(double x, double y) {
+        List<Geometry> geometryList = new ArrayList<>();
         GeoJsonReader reader = new GeoJsonReader();
-        String url = MainJosmMagicWandPlugin.getDotenv().get("DECODE_URL");
 
         try {
 
@@ -149,7 +147,7 @@ public class SamImage {
 
 
             Request request = new Request.Builder()
-                    .url(url)
+                    .url(Constants.DECODE_URL)
                     .post(requestBody)
                     .build();
 
@@ -163,14 +161,35 @@ public class SamImage {
                     List<Double> geojsonConfidence = (List<Double>) dataMap.get("confidence_scores");
                     Double maxVal = Collections.max(geojsonConfidence);
                     Integer maxIdx = geojsonConfidence.indexOf(maxVal);
-                    return reader.read(geojsonsList.get(maxIdx));
+                    Geometry geometryJson = reader.read(geojsonsList.get(maxIdx));
+
+                    // validate geometry
+                    if (geometryJson.getNumGeometries() > 1) {
+                        for (int i = 0; i < geometryJson.getNumGeometries(); i++) {
+                            Geometry g = geometryJson.getGeometryN(i).union().getBoundary();
+                            if (g.getNumPoints() <= 5) continue;
+                            if (g.isValid()) {
+                                geometryList.add(g);
+                            } else {
+                                geometryList.add(GeometryFixer.fix(g));
+                            }
+                        }
+                    } else {
+                        if (geometryJson.isValid()) {
+                            geometryList.add(geometryJson.union().getBoundary());
+                        } else {
+                            geometryList.add(GeometryFixer.fix(geometryJson.union().getBoundary()));
+                        }
+                    }
+
                 }
             }
 
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             Logging.error(e);
         }
-        return null;
+        return CommonUtils.filterByArea(geometryList, 0.15);
     }
 
     public Coordinate mouseClick2Coordinate(double x, double y) {

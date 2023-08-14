@@ -52,13 +52,11 @@ dependencies {
     packIntoJar("org.openpnp:opencv:4.7.0-0")
     packIntoJar("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     packIntoJar("com.squareup.okhttp3:okhttp:4.10.0")
-    packIntoJar("io.github.cdimascio:java-dotenv:5.2.2")
     libsImplementation("org.locationtech.jts:jts-core:1.19.0")
     libsImplementation("org.locationtech.jts.io:jts-io-common:1.19.0")
     libsImplementation("org.openpnp:opencv:4.7.0-0")
     libsImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     libsImplementation("com.squareup.okhttp3:okhttp:4.10.0")
-    libsImplementation("io.github.cdimascio:java-dotenv:5.2.2")
 
 }
 

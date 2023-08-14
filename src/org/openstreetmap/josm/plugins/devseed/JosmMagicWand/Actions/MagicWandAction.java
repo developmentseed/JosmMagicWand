@@ -159,7 +159,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             } catch (Exception ex) {
                 Logging.error(ex);
                 cleanMasks();
-                new Notification(tr(ex.getMessage())).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                new Notification(tr("Error create ways.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             }
         }
     }
@@ -306,6 +306,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
         // simplify
         List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifySmoothGeometry).collect(Collectors.toList());
+        if (geometriesSimplify.isEmpty()) return;
         String tagKey = "magic_wand";
         String tagValue = "yes";
         if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){

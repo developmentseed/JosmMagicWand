@@ -1,13 +1,15 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import org.locationtech.jts.algorithm.Angle;
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
-import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
@@ -229,11 +231,11 @@ public class CommonUtils {
                 coordinates.add(coordinates.get(0));
             var tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
             if (!tmpPolygon.isValid()) {
-                return GeometryFixer.fix(tmpPolygon);
+                return GeometryFixer.fix(tmpPolygon).union().getBoundary();
             }
             return tmpPolygon;
         }
-        return gf.createLineString(coordinates.toArray(new Coordinate[]{}));
+        return gf.createLineString(coordinates.toArray(new Coordinate[]{})).union().getBoundary();
     }
 
     public static List<Coordinate> nodes2Coordinates(List<Node> nodes) {
@@ -255,11 +257,22 @@ public class CommonUtils {
     public static Collection<Command> geometry2WayCommands(DataSet ds, List<Geometry> geometries, String tagMapKey, String tagMapValue) throws Exception {
         Collection<Command> cmds = new LinkedList<>();
         Projection projection = ProjectionRegistry.getProjection();
+        List<Geometry> geometriesSplit = new ArrayList<>();
         for (Geometry geometry : geometries) {
-            if(geometry instanceof MultiPolygon) continue;
+            if (geometry.getNumGeometries() > 1) {
+                for (int j = 0; j < geometry.getNumGeometries(); j++) {
+                    geometriesSplit.add(geometry.union());
+                    System.out.println("geom interno");
+                }
+            } else {
+                geometriesSplit.add(geometry.union());
+                System.out.println("geom externo");
+            }
+        }
 
+        for (Geometry geometry : geometriesSplit) {
             Way w = new Way();
-            List<Node> nodes = coordinates2Nodes(List.of(geometry.getCoordinates()), projection);
+            List<Node> nodes = coordinates2Nodes(List.of(geometry.union().getCoordinates()), projection);
             int index = 0;
             for (Node n : nodes) {
                 if (index == (nodes.size() - 1)) {
@@ -345,10 +358,10 @@ public class CommonUtils {
         Mat mat_blur = blur(mat_image, 7);
         floodFillFacade.fill(mat_blur, mat_flood, x, y);
 
-        Mat mat_open = open(mat_flood, 9);
-        Mat mat_close = close(mat_open, 9);
+        Mat mat_open = open(mat_flood, 5);
+        Mat mat_close = close(mat_open, 5);
 //        Mat mat_erode = erode(mat_close, 3);
-        Mat mat_dilate = dilate(mat_close, 5);
+        Mat mat_dilate = dilate(mat_close, 1);
 
 
         if (mat_mask != null) {

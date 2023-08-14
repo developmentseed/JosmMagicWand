@@ -1,6 +1,5 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.command.Command;
@@ -144,26 +143,26 @@ public class SamDecodeAction extends MapMode implements MouseListener {
             return false;
         }
 
-        Geometry geometrySam = samImage.fetchDecodePoint(eastNorth.getX(), eastNorth.getY());
-        if (geometrySam == null) {
+        List<Geometry> geometrySamList = samImage.fetchDecodePoint(eastNorth.getX(), eastNorth.getY());
+        if (geometrySamList.isEmpty()) {
             new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return false;
         }
 
         Projection projectionSam = Projections.getProjectionByCode("EPSG:4326");
-
-        List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(
-                CommonUtils.coordinates2Nodes(Arrays.asList(geometrySam.getCoordinates()), projectionSam));
-        if (coordsMercator.isEmpty()) {
-            new Notification(tr("No Geometries response.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return false;
-        }
-
-        Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
-
         List<Geometry> geometriesMercator = new ArrayList<>();
 
-        geometriesMercator.add(geometryMercator);
+        for (Geometry samGeometry : geometrySamList) {
+            Geometry geometry = CommonUtils.coordinates2Geometry(
+                    CommonUtils.nodes2Coordinates(
+                            CommonUtils.coordinates2Nodes(
+                                    Arrays.asList(samGeometry.getCoordinates()), projectionSam)), true);
+
+            geometriesMercator.add(CommonUtils.simplifyPolygonHull(geometry.copy(), 0.95)
+            );
+
+        }
+
 
         Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesMercator, tagKey, tagValue);
 

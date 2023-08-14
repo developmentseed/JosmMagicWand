@@ -1,8 +1,6 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
 
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvBuilder;
 import org.openstreetmap.josm.gui.IconToggleButton;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MainMenu;
@@ -19,11 +17,9 @@ import org.openstreetmap.josm.tools.Logging;
 import javax.swing.*;
 
 public class MainJosmMagicWandPlugin extends Plugin {
-    private static Dotenv dotenv;
 
     public MainJosmMagicWandPlugin(PluginInformation info) {
         super(info);
-        dotenv = new DotenvBuilder().load();
         try {
             if (Double.parseDouble(System.getProperty("java.specification.version")) >= 12) {
                 nu.pattern.OpenCV.loadLocally();
@@ -50,8 +46,5 @@ public class MainJosmMagicWandPlugin extends Plugin {
             MainApplication.getMap().addMapMode(new IconToggleButton(new MagicWandAction()));
             MainApplication.getMap().addMapMode(new IconToggleButton(new SamDecodeAction(magicWandDialog)));
         }
-    }
-    public static Dotenv getDotenv() {
-        return dotenv;
     }
 }
