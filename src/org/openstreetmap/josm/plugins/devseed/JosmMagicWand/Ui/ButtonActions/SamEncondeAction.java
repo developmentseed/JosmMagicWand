@@ -58,6 +58,7 @@ public class SamEncondeAction extends JosmAction {
             SwingUtilities.invokeLater(() -> {
                 setEnabled(true);
                 addSamImage(samImage);
+                samImage.updateCacheImage();
             });
         });
         apiThread.start();

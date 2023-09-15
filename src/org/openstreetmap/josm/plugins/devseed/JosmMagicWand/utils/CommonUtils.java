@@ -24,7 +24,10 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.preferences.JosmBaseDirectories;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.layer.ImageryLayer;
+import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.tools.Logging;
 
@@ -32,8 +35,11 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -472,6 +478,17 @@ public class CommonUtils {
 
     }
 
+    public static BufferedImage decodeBase64ToImage(String base64Image) {
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
+            return ImageIO.read(inputStream);
+        } catch (Exception e) {
+            Logging.error(e);
+            return null;
+        }
+    }
+
     public static String magicWandCacheDirPath() {
         String josmCacheDataDir = JosmBaseDirectories.getInstance().getCacheDirectory(true).toString();
 
@@ -499,5 +516,30 @@ public class CommonUtils {
 
     }
 
+    public static String getDateTime() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd__HH_mm_ss");
+        return now.format(formatter);
+    }
+
+    public static String getMapLayerName() {
+        List<Layer> activeLayer = MainApplication.getLayerManager().getLayers();
+        String mapLayerName = "";
+        for (Layer layer : activeLayer) {
+            if (layer instanceof ImageryLayer && layer.isVisible()) {
+                mapLayerName = layer.getName();
+                break;
+            }
+        }
+        if (!mapLayerName.isEmpty() && mapLayerName.length() >= 50) {
+            String normalized = mapLayerName.trim().substring(0, 50).replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
+            return normalized.replaceAll("\\s", "-").toLowerCase();
+        } else if (!mapLayerName.isEmpty()) {
+            String normalized = mapLayerName.trim().replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
+            return normalized.replaceAll("\\s", "-").toLowerCase();
+        } else {
+            return "no_layer_name";
+        }
+    }
 
 }

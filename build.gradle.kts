@@ -55,7 +55,6 @@ dependencies {
     packIntoJar("org.openpnp:opencv:4.7.0-0")
     packIntoJar("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     packIntoJar("com.squareup.okhttp3:okhttp:4.10.0")
-    packIntoJar("jakarta.xml.bind:jakarta.xml.bind-api:3.0.1")
 }
 
 josm {
