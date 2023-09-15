@@ -21,6 +21,7 @@ import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.TagMap;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.preferences.JosmBaseDirectories;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 import org.openstreetmap.josm.gui.MapView;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.openstreetmap.josm.tools.I18n.tr;
 public class CommonUtils {
     // IMAGE
     public static Mat bufferedImage2Mat(BufferedImage bi) {
@@ -469,4 +471,33 @@ public class CommonUtils {
         }
 
     }
+
+    public static String magicWandCacheDirPath() {
+        String josmCacheDataDir = JosmBaseDirectories.getInstance().getCacheDirectory(true).toString();
+
+        return josmCacheDataDir + File.separator + "magicwand";
+    }
+
+    public static boolean existCacheDir() {
+        return new File(magicWandCacheDirPath()).exists();
+    }
+
+    public static void createCacheDir() {
+        String magicWandDirPath = magicWandCacheDirPath();
+        File magicWandDir = new File(magicWandDirPath);
+        if (!magicWandDir.exists()) {
+            boolean wasDirectoryCreated = magicWandDir.mkdir();
+
+            if (wasDirectoryCreated) {
+                Logging.info(tr("magicwand " + "Folder 'magicwand' successfully created at: " + magicWandDirPath));
+            } else {
+                Logging.info(tr("magicwand " + "Failed to create the 'magicwand' folder at: " + magicWandDirPath));
+            }
+        } else {
+            Logging.info(tr("magicwand " + "The 'magicwand' folder already exists at: " + magicWandDirPath));
+        }
+
+    }
+
+
 }

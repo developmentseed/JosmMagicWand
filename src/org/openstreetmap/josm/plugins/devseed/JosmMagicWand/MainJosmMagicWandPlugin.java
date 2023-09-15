@@ -12,6 +12,7 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectA
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SamDecodeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.MagicWandDialog;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
@@ -35,7 +36,8 @@ public class MainJosmMagicWandPlugin extends Plugin {
         jToolmenu.addSeparator();
         MainMenu.add(jToolmenu, new MergeSelectAction());
         MainMenu.add(jToolmenu, new SimplifySelectAction());
-
+        // create a folder
+        CommonUtils.createCacheDir();
     }
 
     @Override
