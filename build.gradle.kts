@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand"
-version = "1.2.0"
+version = "1.2.2"
 
 java {
     toolchain {
@@ -16,17 +16,18 @@ java {
     }
 }
 
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE // O DuplicatesStrategy.EXCLUDE si deseas excluir duplicados
+}
+// Repositories Configuration
 allprojects {
     repositories {
         mavenLocal()
+        mavenCentral()
     }
 }
-configurations { create("externalLibs") }
 
-repositories {
-    mavenCentral()
-}
-
+// Source Sets Configuration
 sourceSets {
     create("libs") {
         java {
@@ -42,24 +43,20 @@ sourceSets {
         }
     }
 }
-val libsImplementation: Configuration by configurations.getting {
-    extendsFrom(configurations.implementation.get())
+
+configurations {
+    create("externalLibs")
 }
 
 dependencies {
+    // Libraries to be packed into the JAR
     packIntoJar("org.locationtech.jts:jts-core:1.19.0")
     packIntoJar("org.locationtech.jts.io:jts-io-common:1.19.0")
     packIntoJar("org.openpnp:opencv:4.7.0-0")
     packIntoJar("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     packIntoJar("com.squareup.okhttp3:okhttp:4.10.0")
-    libsImplementation("org.locationtech.jts:jts-core:1.19.0")
-    libsImplementation("org.locationtech.jts.io:jts-io-common:1.19.0")
-    libsImplementation("org.openpnp:opencv:4.7.0-0")
-    libsImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    libsImplementation("com.squareup.okhttp3:okhttp:4.10.0")
-
+    packIntoJar("jakarta.xml.bind:jakarta.xml.bind-api:3.0.1")
 }
-
 
 josm {
     pluginName = "josm_magic_wand"
@@ -75,5 +72,4 @@ josm {
         website = URL("https://github.com/developmentseed/JosmMagicWand")
         minJavaVersion = 11
     }
-
 }
