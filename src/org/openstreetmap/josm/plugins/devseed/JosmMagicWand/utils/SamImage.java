@@ -54,8 +54,11 @@ public class SamImage {
     private Way bboxWay;
     @JsonProperty("nameObject")
     private String nameObject;
+    @JsonProperty("layerName")
+    private String layerName;
 
-    public SamImage(ProjectionBounds projectionBounds, BufferedImage layerImage) {
+
+    public SamImage(ProjectionBounds projectionBounds, BufferedImage layerImage, String layerName) {
         //  image
         this.setLayerImage(layerImage);
         this.setBase64Image(CommonUtils.encodeImageToBase64(layerImage));
@@ -75,8 +78,8 @@ public class SamImage {
                 projectionBounds.getMax().getY())));
         this.setBboxPolygon(createPolygonFromDoubles(this.getBbox()));
         this.setBboxWay(createBboxWay());
-        this.setNameObject(CommonUtils.getMapLayerName() + "__" + CommonUtils.getDateTime() + ".json");
-
+        this.setNameObject(CommonUtils.getDateTime() + "__" + CommonUtils.getMapLayerName(layerName) + ".json");
+        this.setLayerName(layerName);
         saveCache(this.nameObject);
     }
 
@@ -87,7 +90,9 @@ public class SamImage {
             @JsonProperty("imageShape") List<Integer> imageShape,
             @JsonProperty("crs") String crs,
             @JsonProperty("bbox") List<Double> bbox,
-            @JsonProperty("imageEmbedding") String imageEmbedding
+            @JsonProperty("imageEmbedding") String imageEmbedding,
+            @JsonProperty("layerName") String layerName
+
     ) {
         this.setNameObject(nameObject);
         this.setBase64Image(base64Image);
@@ -101,6 +106,7 @@ public class SamImage {
         this.setBboxPolygon(createPolygonFromDoubles(this.getBbox()));
         this.setBboxWay(createBboxWay());
         this.setImageEmbedding(imageEmbedding);
+        this.setLayerName(layerName);
 
     }
 
@@ -374,5 +380,13 @@ public class SamImage {
 
     public void setNameObject(String nameObject) {
         this.nameObject = nameObject;
+    }
+
+    public String getLayerName() {
+        return layerName;
+    }
+
+    public void setLayerName(String layerName) {
+        this.layerName = layerName;
     }
 }

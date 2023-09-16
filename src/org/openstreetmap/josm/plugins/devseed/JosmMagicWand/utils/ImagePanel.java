@@ -1,21 +1,21 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import org.openstreetmap.josm.data.ProjectionBounds;
-import org.openstreetmap.josm.data.coor.EastNorth;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.data.imagery.ImageryInfo;
+import org.openstreetmap.josm.data.imagery.ImageryLayerInfo;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.layer.OsmDataLayer;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.openstreetmap.josm.gui.MainApplication.getMap;
 
 
 public class ImagePanel extends JPanel {
@@ -97,7 +97,33 @@ public class ImagePanel extends JPanel {
     }
 
     private void zoomAction() {
-        MapView mapView = MainApplication.getMap().mapView;
+        MapView mapView = getMap().mapView;
+
+        try {
+            // add layer
+            List<Layer> activeLayers = mapView.getLayerManager()
+                    .getVisibleLayersInZOrder()
+                    .stream()
+                    .filter(layer -> (layer instanceof ImageryLayer && layer.isVisible() && layer.getName().equals(samImage.getLayerName())))
+                    .collect(Collectors.toList());
+
+            if (activeLayers.isEmpty()) {
+                List<ImageryInfo> imagerySources = ImageryLayerInfo
+                        .instance
+                        .getLayers()
+                        .stream()
+                        .filter(layer -> (layer.getName().equals(samImage.getLayerName())))
+                        .collect(Collectors.toList());
+
+                if (!imagerySources.isEmpty()) {
+                    ImageryInfo imageryInfo = imagerySources.get(0);
+                    mapView.getLayerManager().addLayer(ImageryLayer.create(imageryInfo));
+                }
+            }
+        } catch (Exception e) {
+            Logging.error(e);
+        }
+
         ProjectionBounds projectionBounds = samImage.getProjectionBounds();
         mapView.zoomTo(projectionBounds);
         mapView.zoomIn();

@@ -24,7 +24,6 @@ public class SamImageGrid extends JPanel {
 
         for (File jsonFile : cacheFiles) {
             try {
-                Logging.warn(jsonFile.toString());
                 SamImage samImage = objectMapper.readValue(jsonFile, SamImage.class);
                 addSamImage(samImage);
             } catch (Exception e) {

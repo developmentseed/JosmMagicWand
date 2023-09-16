@@ -24,10 +24,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.preferences.JosmBaseDirectories;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
-import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
-import org.openstreetmap.josm.gui.layer.ImageryLayer;
-import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.tools.Logging;
 
@@ -522,20 +519,13 @@ public class CommonUtils {
         return now.format(formatter);
     }
 
-    public static String getMapLayerName() {
-        List<Layer> activeLayer = MainApplication.getLayerManager().getLayers();
-        String mapLayerName = "";
-        for (Layer layer : activeLayer) {
-            if (layer instanceof ImageryLayer && layer.isVisible()) {
-                mapLayerName = layer.getName();
-                break;
-            }
-        }
-        if (!mapLayerName.isEmpty() && mapLayerName.length() >= 50) {
-            String normalized = mapLayerName.trim().substring(0, 50).replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
+    public static String getMapLayerName(String layerName) {
+
+        if (layerName.length() >= 50) {
+            String normalized = layerName.trim().substring(0, 50).replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
             return normalized.replaceAll("\\s", "-").toLowerCase();
-        } else if (!mapLayerName.isEmpty()) {
-            String normalized = mapLayerName.trim().replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
+        } else if (!layerName.isEmpty()) {
+            String normalized = layerName.trim().replaceAll("[^a-zA-Z0-9\\s-]", "").replaceAll("\\s+", " ");
             return normalized.replaceAll("\\s", "-").toLowerCase();
         } else {
             return "no_layer_name";
