@@ -19,13 +19,13 @@ public class SamImageGrid extends JPanel {
         setLayout(new GridLayout(0, 2, 1, 1));
 
         //
-        File carpeta = new File(CommonUtils.magicWandCacheDirPath());
-        File[] archivosJson = carpeta.listFiles((dir, nombre) -> nombre.endsWith(".json"));
+        File cacheDir = new File(CommonUtils.magicWandCacheDirPath());
+        File[] cacheFiles = cacheDir.listFiles((dir, fileName) -> fileName.endsWith(".json"));
 
-        for (File archivoJson : archivosJson) {
+        for (File jsonFile : cacheFiles) {
             try {
-                Logging.warn(archivoJson.toString());
-                SamImage samImage = objectMapper.readValue(archivoJson, SamImage.class);
+                Logging.warn(jsonFile.toString());
+                SamImage samImage = objectMapper.readValue(jsonFile, SamImage.class);
                 addSamImage(samImage);
             } catch (Exception e) {
                 Logging.error(e);

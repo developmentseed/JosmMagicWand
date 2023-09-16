@@ -111,7 +111,6 @@ public class SamImage {
         String magicWandDirPath = CommonUtils.magicWandCacheDirPath();
         String filePath = magicWandDirPath + File.separator + fileName;
         try {
-            String json = objectMapper.writeValueAsString(this);
             File file = new File(filePath);
             objectMapper.writeValue(file, this);
 
