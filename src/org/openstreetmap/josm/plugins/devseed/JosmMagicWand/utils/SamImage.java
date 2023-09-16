@@ -14,7 +14,6 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.tools.Logging;
 
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.*;
@@ -75,13 +74,21 @@ public class SamImage {
                 projectionBounds.getMax().getX(),
                 projectionBounds.getMax().getY())));
         this.setBboxPolygon(createPolygonFromDoubles(this.getBbox()));
-        this.setBboxWay(createBooxWay());
+        this.setBboxWay(createBboxWay());
         this.setNameObject(CommonUtils.getMapLayerName() + "__" + CommonUtils.getDateTime() + ".json");
 
         saveCache(this.nameObject);
     }
 
-    public SamImage(String nameObject, String base64Image, boolean isEncodeImage, List<Integer> imageShape, String crs, List<Double> bbox, String imageEmbedding) {
+    public SamImage(
+            @JsonProperty("nameObject") String nameObject,
+            @JsonProperty("base64Image") String base64Image,
+            @JsonProperty("isEncodeImage") boolean isEncodeImage,
+            @JsonProperty("imageShape") List<Integer> imageShape,
+            @JsonProperty("crs") String crs,
+            @JsonProperty("bbox") List<Double> bbox,
+            @JsonProperty("imageEmbedding") String imageEmbedding
+    ) {
         this.setNameObject(nameObject);
         this.setBase64Image(base64Image);
         this.setLayerImage(CommonUtils.decodeBase64ToImage(base64Image));
@@ -92,7 +99,7 @@ public class SamImage {
         ProjectionBounds projectionBoundsTmp = new ProjectionBounds(bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
         this.setProjectionBounds(projectionBoundsTmp);
         this.setBboxPolygon(createPolygonFromDoubles(this.getBbox()));
-        this.setBboxWay(createBooxWay());
+        this.setBboxWay(createBboxWay());
         this.setImageEmbedding(imageEmbedding);
 
     }
@@ -265,9 +272,6 @@ public class SamImage {
         return new Coordinate(nx * bboxWidth, (1 - ny) * bboxHeight);
     }
 
-    public List<Double> getBoox() {
-        return getBbox();
-    }
 
     public boolean containsPoint(Point p) {
         try {
@@ -278,7 +282,7 @@ public class SamImage {
         return false;
     }
 
-    private Way createBooxWay() {
+    private Way createBboxWay() {
         Node node1 = new Node(new EastNorth(getBbox().get(0), getBbox().get(1)));
         Node node2 = new Node(new EastNorth(getBbox().get(0), getBbox().get(3)));
         Node node3 = new Node(new EastNorth(getBbox().get(2), getBbox().get(3)));
