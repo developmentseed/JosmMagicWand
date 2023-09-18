@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-public class SamImageGrid extends JPanel {
+public class SamImageGrid extends JPanel implements ImagePanelListener {
     private ArrayList<SamImage> samImageList;
     private int maxWidth;
     ObjectMapper objectMapper = new ObjectMapper();
@@ -55,21 +55,24 @@ public class SamImageGrid extends JPanel {
         return null;
     }
 
-    public void removeSamImage(int index) {
-        if (index >= 0 && index < samImageList.size()) {
-            samImageList.remove(index);
-            updateJpanel();
-        }
-    }
-
     private void updateJpanel() {
         removeAll();
         for (SamImage samImage : samImageList) {
-            add(new ImagePanel(samImage, this.maxWidth));
+            add(new ImagePanel(samImage, this.maxWidth,this));
         }
         revalidate();
         repaint();
     }
 
 
+    @Override
+    public void removeSamImage(SamImage samImage) {
+        try {
+            samImageList.remove(samImage);
+            updateJpanel();
+        } catch (Exception e) {
+            Logging.error(e);
+
+        }
+    }
 }

@@ -127,9 +127,19 @@ public class SamImage {
         }
     }
     public void updateCacheImage(){
-        saveCache(this.nameObject);
+        saveCache(nameObject);
     }
+    public void removeCacheImge(){
+        try {
+            String magicWandDirPath = CommonUtils.magicWandCacheDirPath();
+            String filePath = magicWandDirPath + File.separator + nameObject;
+            File file = new File(filePath);
+            file.delete();
+        }catch (Exception e){
+            Logging.error(e);
+        }
 
+    }
     public BufferedImage getLayerImage() {
         return layerImage;
     }

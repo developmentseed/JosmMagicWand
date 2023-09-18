@@ -29,15 +29,16 @@ public class ImagePanel extends JPanel {
     private SamImage samImage;
 
     private JLabel imageLabel;
+    private ImagePanelListener listener;
 
-    public ImagePanel(SamImage samImage, int maxWidth) {
+    public ImagePanel(SamImage samImage, int maxWidth, ImagePanelListener listener) {
         setLayout(null);
         this.samImage = samImage;
         this.image = samImage.getLayerImage();
         this.maxWidth = maxWidth;
 
         this.maxHeight = getMaxHeight(samImage.getLayerImage(), maxWidth);
-
+        this.listener = listener;
         setupButtons();
         // image
         Graphics2D g2d = this.image.createGraphics();
@@ -48,8 +49,6 @@ public class ImagePanel extends JPanel {
         imageLabel.setBounds(0, 0, this.maxWidth, this.maxHeight);
         setPreferredSize(new Dimension(this.maxWidth, this.maxHeight));
         // setup actions
-
-//        addLayer();
 
     }
 
@@ -85,13 +84,14 @@ public class ImagePanel extends JPanel {
 
         zoomJButton.setBounds(20, this.maxHeight - 32, zoomIco.getIconWidth(), zoomIco.getIconHeight());
         zoomJButton.setContentAreaFilled(false);
-
         zoomJButton.addActionListener(e -> zoomAction());
         add(zoomJButton);
 
         deleteJButton = new JButton(deleteIco);
         deleteJButton.setBounds(70, this.maxHeight - 32, deleteIco.getIconWidth(), deleteIco.getIconHeight());
         deleteJButton.setContentAreaFilled(false);
+        deleteJButton.addActionListener(e -> deleteAction());
+
         add(deleteJButton);
 
     }
@@ -130,4 +130,12 @@ public class ImagePanel extends JPanel {
         mapView.repaint();
     }
 
+    private void deleteAction() {
+        try {
+            samImage.removeCacheImge();
+            listener.removeSamImage(samImage);
+        } catch (Exception e) {
+            Logging.error(e);
+        }
+    }
 }
