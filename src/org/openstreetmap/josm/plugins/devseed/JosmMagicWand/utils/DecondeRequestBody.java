@@ -11,14 +11,14 @@ public class DecondeRequestBody {
     private List<Integer> input_point;
     private double zoom;
 
-    public DecondeRequestBody(List<Double> bbox, String image_embeddings, List<Integer> image_shape, int input_label, List<Integer> input_point, double zoom, String crs) {
+    public DecondeRequestBody(List<Double> bbox, String image_embeddings, List<Integer> image_shape, List<Integer> input_point) {
         this.bbox = bbox;
-        this.crs=crs;
+        this.crs="EPSG:3857";
         this.image_embeddings = image_embeddings;
         this.image_shape = image_shape;
-        this.input_label = input_label;
+        this.input_label = 1;
         this.input_point = input_point;
-        this.zoom = zoom;
+        this.zoom = 15;
     }
 
 

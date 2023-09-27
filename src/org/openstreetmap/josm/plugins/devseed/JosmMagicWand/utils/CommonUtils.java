@@ -1,15 +1,13 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
 import org.locationtech.jts.algorithm.Angle;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.precision.GeometryPrecisionReducer;
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 import org.locationtech.jts.simplify.PolygonHullSimplifier;
 import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
+import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
@@ -228,19 +226,28 @@ public class CommonUtils {
     }
 
     // GEOMETRY UTILS
-    public static Geometry coordinates2Geometry(List<Coordinate> coordinates, boolean close) throws Exception {
+    public static Polygon coordinates2Polygon(List<Coordinate> coordinates) throws Exception {
+        if (coordinates == null || coordinates.size() < 3) {
+            throw new Exception("The coordinate list must have at least 3 points to form a valid polygon.");
+        }
         GeometryFactory gf = new GeometryFactory();
 
-        if (close) {
-            if (!coordinates.get(coordinates.size() - 1).equals(coordinates.get(0)))
-                coordinates.add(coordinates.get(0));
-            var tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
-            if (!tmpPolygon.isValid()) {
-                return GeometryFixer.fix(tmpPolygon).union().getBoundary();
-            }
-            return tmpPolygon;
+        if (!coordinates.get(coordinates.size() - 1).equals(coordinates.get(0))) {
+            coordinates.add(coordinates.get(0));
         }
-        return gf.createLineString(coordinates.toArray(new Coordinate[]{})).union().getBoundary();
+
+        Polygon tmpPolygon = gf.createPolygon(coordinates.toArray(new Coordinate[]{}));
+        if (!tmpPolygon.isValid()) {
+            Geometry fixedGeometry = GeometryFixer.fix(tmpPolygon);
+            if (fixedGeometry instanceof Polygon) {
+                return gf.createPolygon(((Polygon) fixedGeometry).getExteriorRing().getCoordinates());
+            } else if (fixedGeometry instanceof MultiPolygon) {
+                return gf.createPolygon(((Polygon) fixedGeometry.getGeometryN(0)).getExteriorRing().getCoordinates());
+            } else {
+                throw new Exception("La corrección de la geometría no produjo un polígono válido.");
+            }
+        }
+        return tmpPolygon;
     }
 
     public static List<Coordinate> nodes2Coordinates(List<Node> nodes) {
@@ -334,7 +341,7 @@ public class CommonUtils {
             }
             Logging.info("-- chaikinAlgotihm -- Ang: " + maxAngle + " Orig: " + coordinates.length + " new : " + tmpCoords.size());
 
-            return simplifyPolygonHull(coordinates2Geometry(tmpCoords, true), 0.999);
+            return simplifyPolygonHull(coordinates2Polygon(tmpCoords), 0.999);
         } catch (Exception e) {
             Logging.error(e);
             return geometry;
@@ -436,7 +443,7 @@ public class CommonUtils {
                     tmpCoords.add(c);
                 }
                 // create multi
-                Geometry geometryTmp = coordinates2Geometry(tmpCoords, true);
+                Geometry geometryTmp = coordinates2Polygon(tmpCoords);
                 geometries.add(geometryTmp.copy());
             } catch (Exception ex) {
                 Logging.error(ex);
@@ -532,4 +539,20 @@ public class CommonUtils {
         }
     }
 
+    public static List<Geometry> extractPolygons(Geometry geometry) {
+        List<Geometry> polygons = new ArrayList<>();
+
+        if (geometry instanceof MultiPolygon) {
+            for (int i = 0; i < geometry.getNumGeometries(); i++) {
+                Geometry subGeometry = geometry.getGeometryN(i);
+                polygons.addAll(extractPolygons(subGeometry));
+            }
+        } else if (geometry instanceof Polygon) {
+            if (geometry.getNumPoints() > 5 && geometry.isValid()) {
+                polygons.add((Polygon) geometry);
+            }
+        }
+
+        return polygons;
+    }
 }

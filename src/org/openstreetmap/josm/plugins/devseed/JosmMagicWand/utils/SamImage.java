@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.locationtech.jts.geom.*;
-import org.locationtech.jts.geom.util.GeometryFixer;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
@@ -166,7 +165,7 @@ public class SamImage {
 
             //    client
             OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(3, TimeUnit.SECONDS)
+                    .connectTimeout(5, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS)
                     .build();
 
@@ -211,11 +210,10 @@ public class SamImage {
             // request body
             Coordinate clickCoordinate = mouseClick2Coordinate(x, y);
 
-            DecondeRequestBody decodeRequestBody = new DecondeRequestBody(getBbox(), getImageEmbedding(), getImageShape(), 1, Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y), 15, getCrs());
+            DecondeRequestBody decodeRequestBody = new DecondeRequestBody(getBbox(), getImageEmbedding(), getImageShape(), Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y));
             String requestBodyJson = objectMapper.writeValueAsString(decodeRequestBody);
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
-
             //    client
 
             OkHttpClient client = new OkHttpClient.Builder()
@@ -240,34 +238,15 @@ public class SamImage {
                     Double maxVal = Collections.max(geojsonConfidence);
                     Integer maxIdx = geojsonConfidence.indexOf(maxVal);
                     Geometry geometryJson = reader.read(geojsonsList.get(maxIdx));
-
                     // validate geometry
-                    if (geometryJson.getNumGeometries() > 1) {
-                        for (int i = 0; i < geometryJson.getNumGeometries(); i++) {
-                            Geometry g = geometryJson.getGeometryN(i).union().getBoundary();
-                            if (g.getNumPoints() <= 5) continue;
-                            if (g.isValid()) {
-                                geometryList.add(g);
-                            } else {
-                                geometryList.add(GeometryFixer.fix(g));
-                            }
-                        }
-                    } else {
-                        if (geometryJson.isValid()) {
-                            geometryList.add(geometryJson.union().getBoundary());
-                        } else {
-                            geometryList.add(GeometryFixer.fix(geometryJson.union().getBoundary()));
-                        }
-                    }
-
+                    geometryList = CommonUtils.extractPolygons(geometryJson);
                 }
             }
 
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             Logging.error(e);
         }
-        return CommonUtils.filterByArea(geometryList, 0.15);
+        return CommonUtils.filterByArea(geometryList, 0.1);
     }
 
     public Coordinate mouseClick2Coordinate(double x, double y) {

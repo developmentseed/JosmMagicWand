@@ -153,14 +153,11 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         List<Geometry> geometriesMercator = new ArrayList<>();
 
         for (Geometry samGeometry : geometrySamList) {
-            Geometry geometry = CommonUtils.coordinates2Geometry(
-                    CommonUtils.nodes2Coordinates(
-                            CommonUtils.coordinates2Nodes(
-                                    Arrays.asList(samGeometry.getCoordinates()), projectionSam)), true);
-
-            geometriesMercator.add(CommonUtils.simplifyPolygonHull(geometry.copy(), 0.95)
-            );
-
+            var nodesMercator = CommonUtils.coordinates2Nodes(Arrays.asList(samGeometry.getCoordinates()), projectionSam);
+            var coordMercator = CommonUtils.nodes2Coordinates(nodesMercator);
+            var geometry = CommonUtils.coordinates2Polygon(coordMercator);
+            var geometrySimPolygonHull = CommonUtils.simplifyPolygonHull(geometry.copy(), 0.95);
+            geometriesMercator.add(geometrySimPolygonHull);
         }
 
 
