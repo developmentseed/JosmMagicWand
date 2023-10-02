@@ -7,6 +7,7 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.LayerImageValues;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
 
 import javax.swing.*;
@@ -40,9 +41,10 @@ public class SamEncondeAction extends JosmAction {
         }
 
         if (hasMapLayer) {
-            BufferedImage bufferedImage = getLayeredImage(mapView);
+            LayerImageValues layerImageValues = getLayeredImage(mapView);
 
-            SamImage samImage = new SamImage(mapView.getProjectionBounds(), bufferedImage);
+            SamImage samImage = new SamImage(mapView.getProjectionBounds(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
+
             // effect
             setEnabled(false);
             apiThread(samImage);
@@ -56,8 +58,9 @@ public class SamEncondeAction extends JosmAction {
         Thread apiThread = new Thread(() -> {
             samImage.setEncodeImage();
             SwingUtilities.invokeLater(() -> {
-                setEnabled(true);
                 addSamImage(samImage);
+                samImage.updateCacheImage();
+                setEnabled(true);
             });
         });
         apiThread.start();
@@ -74,8 +77,8 @@ public class SamEncondeAction extends JosmAction {
         }
     }
 
-    private BufferedImage getLayeredImage(MapView mapView) {
-
+    private LayerImageValues getLayeredImage(MapView mapView) {
+        LayerImageValues layerImageValues = new LayerImageValues();
         BufferedImage bufImage = new BufferedImage(mapView.getWidth(), mapView.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D imgGraphics = bufImage.createGraphics();
         imgGraphics.setClip(0, 0, mapView.getWidth(), mapView.getHeight());
@@ -85,9 +88,12 @@ public class SamEncondeAction extends JosmAction {
                 Composite translucent = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) layer.getOpacity());
                 imgGraphics.setComposite(translucent);
                 mapView.paintLayer(layer, imgGraphics);
+                layerImageValues.setBufferedImage(bufImage);
+                layerImageValues.setLayerName(layer.getName());
             }
+
         }
 
-        return bufImage;
+        return layerImageValues;
     }
 }

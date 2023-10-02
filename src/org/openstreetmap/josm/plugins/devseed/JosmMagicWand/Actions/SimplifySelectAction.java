@@ -74,7 +74,7 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
         List<Geometry> geometries = new ArrayList<>();
         for (Way w : ways) {
             List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(w.getNodes());
-            Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
+            Geometry geometryMercator = CommonUtils.coordinates2Polygon(coordsMercator);
             Geometry geometrySimplify = CommonUtils.simplifySmoothGeometry(geometryMercator);
             geometries.add(geometrySimplify);
         }
