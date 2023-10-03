@@ -33,7 +33,9 @@ public class SamImageGrid extends JPanel implements ImagePanelListener {
     }
 
     public void addSamImage(SamImage samImage) {
-        samImageList.add(samImage);
+        if (samImage.isEncodeImage()) {
+            samImageList.add(samImage);
+        }
         updateJpanel();
     }
 
