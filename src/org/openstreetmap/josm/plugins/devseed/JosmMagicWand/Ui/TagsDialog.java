@@ -1,9 +1,10 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui;
 
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.widgets.HistoryComboBox;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.tools.GBC;
 
 import javax.swing.*;

@@ -41,3 +41,7 @@ bin/
 
 ### Other ###
 osmjar/
+
+*.env
+### constants
+./src/**/utils/Constants.java

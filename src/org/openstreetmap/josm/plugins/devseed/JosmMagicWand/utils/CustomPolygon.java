@@ -24,7 +24,7 @@ public class CustomPolygon {
     public void fromWay(Way w) {
         this.way = w;
         try {
-            this.pol = (Polygon) CommonUtils.coordinates2Geometry(CommonUtils.nodes2Coordinates(w.getNodes()), true);
+            this.pol = CommonUtils.coordinates2Polygon(CommonUtils.nodes2Coordinates(w.getNodes()));
         } catch (Exception ex) {
             Logging.error(ex);
         }

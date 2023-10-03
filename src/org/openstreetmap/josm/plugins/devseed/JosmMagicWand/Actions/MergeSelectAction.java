@@ -1,4 +1,4 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions;
 
 import org.locationtech.jts.geom.Geometry;
 import org.openstreetmap.josm.actions.JosmAction;
@@ -12,6 +12,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CustomPolygon;
 import org.openstreetmap.josm.tools.Logging;

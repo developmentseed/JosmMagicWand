@@ -1,4 +1,4 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -13,6 +13,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.Shortcut;
@@ -31,7 +32,7 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
 
 
     public SimplifySelectAction() {
-        super(tr("Simplify way"), "mapmode/magic-wand-merge", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
+        super(tr("Simplify way"), "mapmode/magic-wand-simplify", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
         List<Geometry> geometries = new ArrayList<>();
         for (Way w : ways) {
             List<Coordinate> coordsMercator = CommonUtils.nodes2Coordinates(w.getNodes());
-            Geometry geometryMercator = CommonUtils.coordinates2Geometry(coordsMercator, true);
+            Geometry geometryMercator = CommonUtils.coordinates2Polygon(coordsMercator);
             Geometry geometrySimplify = CommonUtils.simplifySmoothGeometry(geometryMercator);
             geometries.add(geometrySimplify);
         }

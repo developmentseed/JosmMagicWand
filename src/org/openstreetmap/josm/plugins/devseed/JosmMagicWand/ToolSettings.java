@@ -1,5 +1,10 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
 
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ToolSettings {
     private ToolSettings() {
     }
@@ -16,8 +21,25 @@ public final class ToolSettings {
     //smooth
     private static double chaikinSmooDistance;
     private static double chaikinSmooAngle;
-// tags
+    // tags
     private static String autoTags;
+    // sam images
+    private static List<SamImage> samImagesList = new ArrayList<>();
+
+    public static List<SamImage> getSamImagesList() {
+        return samImagesList;
+    }
+    public static void setSamImagesList(List<SamImage> samImagesList) {
+        ToolSettings.samImagesList = samImagesList;
+    }
+
+    public static void setSamImage(SamImage samImage) {
+        ToolSettings.samImagesList.add(samImage);
+    }
+    public static void clearSamImagesList() {
+        ToolSettings.samImagesList.clear();
+    }
+
     public static int getMaskOpen() {
         return maskOpen;
     }
@@ -67,11 +89,11 @@ public final class ToolSettings {
         ToolSettings.simplTopologyPreserving = simplTopologyPreserving;
     }
 
-    public static double getSimplifyDouglasP() {
+    public static double getSimplDouglasP() {
         return simplDouglasP;
     }
 
-    public static void setSimplifyDouglasP(double simplDouglasP) {
+    public static void setSimplDouglasP(double simplDouglasP) {
         ToolSettings.simplDouglasP = simplDouglasP;
     }
 

@@ -1,4 +1,4 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions;
 
 import org.locationtech.jts.geom.Geometry;
 import org.opencv.core.Mat;
@@ -18,6 +18,7 @@ import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MapViewPaintable;
 import org.openstreetmap.josm.gui.util.KeyPressReleaseListener;
 import org.openstreetmap.josm.gui.util.ModifierExListener;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.spi.preferences.PreferenceChangedListener;
@@ -66,7 +67,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
 
 
     public MagicWandAction() {
-        super(tr("MAgic Wand action "), "magic-wand", tr("Magic wand add"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
+        super(tr("Magic Wand"), "magic-wand", tr("Magic wand"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
 
     }
 
@@ -158,7 +159,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             } catch (Exception ex) {
                 Logging.error(ex);
                 cleanMasks();
-                new Notification(tr(ex.getMessage())).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                new Notification(tr("Error create ways.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             }
         }
     }
@@ -305,6 +306,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
         // simplify
         List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifySmoothGeometry).collect(Collectors.toList());
+        if (geometriesSimplify.isEmpty()) return;
         String tagKey = "magic_wand";
         String tagValue = "yes";
         if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
