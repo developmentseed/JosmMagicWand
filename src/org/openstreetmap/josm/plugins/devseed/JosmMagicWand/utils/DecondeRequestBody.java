@@ -10,6 +10,7 @@ public class DecondeRequestBody {
     private int input_label;
     private List<Integer> input_point;
     private double zoom;
+    private String decode_type;
 
     public DecondeRequestBody(List<Double> bbox, String image_embeddings, List<Integer> image_shape, List<Integer> input_point) {
         this.bbox = bbox;
@@ -19,6 +20,7 @@ public class DecondeRequestBody {
         this.input_label = 1;
         this.input_point = input_point;
         this.zoom = 15;
+        this.decode_type = "single_point";
     }
 
 
@@ -76,5 +78,13 @@ public class DecondeRequestBody {
 
     public void setZoom(double zoom) {
         this.zoom = zoom;
+    }
+
+    public String getDecode_type() {
+        return decode_type;
+    }
+
+    public void setDecode_type(String decode_type) {
+        this.decode_type = decode_type;
     }
 }
