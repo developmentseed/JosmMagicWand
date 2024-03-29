@@ -91,8 +91,8 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
 
         try {
-            String tagKey = "magic_wand_merge";
-            String tagValue = "yes";
+            String tagKey = "";
+            String tagValue = "";
             if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
                 List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
                 tagKey = strings.get(0);

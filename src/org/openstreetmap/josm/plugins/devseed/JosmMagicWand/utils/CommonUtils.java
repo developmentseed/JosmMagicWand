@@ -295,7 +295,9 @@ public class CommonUtils {
                 }
                 index++;
             }
-            w.setKeys(new TagMap(tagMapKey, tagMapValue));
+            if(!(tagMapKey.isBlank() || tagMapValue.isBlank()) ){
+                w.setKeys(new TagMap(tagMapKey, tagMapValue));
+            }
             cmds.add(new AddCommand(ds, w));
         }
         return cmds;

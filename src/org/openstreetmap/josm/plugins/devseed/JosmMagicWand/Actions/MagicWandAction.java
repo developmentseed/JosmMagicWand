@@ -307,8 +307,8 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         // simplify
         List<Geometry> geometriesSimplify = geometries.stream().map(CommonUtils::simplifySmoothGeometry).collect(Collectors.toList());
         if (geometriesSimplify.isEmpty()) return;
-        String tagKey = "magic_wand";
-        String tagValue = "yes";
+        String tagKey = "";
+        String tagValue = "";
         if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
             List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
             tagKey = strings.get(0);

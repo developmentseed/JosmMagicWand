@@ -129,8 +129,8 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         MapView mapView = MainApplication.getMap().mapView;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
 
-        String tagKey = "magic_wand_sam";
-        String tagValue = "yes";
+        String tagKey = "";
+        String tagValue = "";
 
         LatLon latLon = mapView.getLatLon(e.getX(), e.getY());
         Projection projection = ProjectionRegistry.getProjection();
