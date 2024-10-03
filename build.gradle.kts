@@ -8,38 +8,32 @@ plugins {
 }
 
 group = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand"
-version = "2.0.3"
+version = "2.0.4"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
 tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE // O DuplicatesStrategy.EXCLUDE si deseas excluir duplicados
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 // Repositories Configuration
-allprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
+repositories {
+    mavenLocal()
+    mavenCentral()
 }
 
 // Source Sets Configuration
 sourceSets {
-    create("libs") {
-        java {
-            srcDir("src").include(listOf("org/openstreetmap/**"))
-        }
-    }
     main {
         java {
-            srcDir("src").include("org/openstreetmap/**")
+            srcDir("src")
+            include("org/openstreetmap/**")
         }
         resources {
-            srcDir(project.projectDir).include("images/**")
+            srcDir("images/**")
         }
     }
 }
@@ -60,15 +54,15 @@ dependencies {
 josm {
     pluginName = "josm_magic_wand"
     debugPort = 1729
-    josmCompileVersion = "18700"
+    josmCompileVersion = "19230"
     manifest {
         description = "JOSM plugin for select areas by color range."
         mainClass = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin"
-        minJosmVersion = "18193"
+        minJosmVersion = "19096"
         author = "yunica"
         canLoadAtRuntime = true
         iconPath = "images/dialogs/magicwand.svg"
         website = URL("https://github.com/developmentseed/JosmMagicWand")
-        minJavaVersion = 11
+        minJavaVersion = 17
     }
 }
