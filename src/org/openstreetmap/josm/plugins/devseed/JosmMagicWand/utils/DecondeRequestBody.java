@@ -3,6 +3,7 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 import java.util.List;
 
 public class DecondeRequestBody {
+
     private List<Double> bbox;
     private String crs;
     private String image_embeddings;
@@ -22,7 +23,6 @@ public class DecondeRequestBody {
         this.zoom = 15;
         this.decode_type = "single_point";
     }
-
 
     public List<Double> getBbox() {
         return bbox;

@@ -42,8 +42,7 @@ public class SamEncondeAction extends JosmAction {
 
         if (hasMapLayer) {
             LayerImageValues layerImageValues = getLayeredImage(mapView);
-
-            SamImage samImage = new SamImage(mapView.getProjectionBounds(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
+            SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(),mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
 
             // effect
             setEnabled(false);
@@ -67,7 +66,7 @@ public class SamEncondeAction extends JosmAction {
     }
 
     private void addSamImage(SamImage samImage) {
-        if (samImage.isEncodeImage()) {
+        if (samImage.isEncode()) {
             listener.addLayer();
             listener.addBboxLayer(samImage.getBboxWay());
             listener.onAddSamImage(samImage);
