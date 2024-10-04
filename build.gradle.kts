@@ -33,7 +33,7 @@ sourceSets {
             include("org/openstreetmap/**")
         }
         resources {
-            srcDir("images/**")
+            srcDir(project.projectDir).include("images/**")
         }
     }
 }
