@@ -10,7 +10,7 @@ public class EncondeRequestBody {
     private Integer zoom;
     private List<Double> bbox;
 
-    public EncondeRequestBody(String canvas_image, String project, Integer zoom, List<Double>  bbox, String id) {
+    public EncondeRequestBody(String canvas_image, String project, Integer zoom, List<Double> bbox, String id) {
         this.canvas_image = canvas_image;
         this.crs = "EPSG:4326";
         this.id = id;

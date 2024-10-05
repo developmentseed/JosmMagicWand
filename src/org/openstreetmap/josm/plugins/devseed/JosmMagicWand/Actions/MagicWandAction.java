@@ -46,26 +46,15 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private static final Cursor CURSOR_CUSTOM = ImageProvider.getCursor("crosshair", "magic-wand");
     private static final Cursor CURSOR_ADD = ImageProvider.getCursor("crosshair", "magic-wand-add");
     private static final Cursor CURSOR_SUBS = ImageProvider.getCursor("crosshair", "magic-wand-subs");
-
-
-    private enum Mode {
-        None, Drawing
-    }
-
-    private Mode mode = Mode.None;
-    private Mode nextMode = Mode.None;
-
-    private Color selectedColor = Color.red;
-    private Point drawStartPos;
-    private Point mousePos;
-
-    private final PreferenceChangedListener shapeChangeListener = event -> updCursor();
-
     // OPEN CV
     private static Mat mat_mask;
     private static Mat mat_image;
-
-
+    private final PreferenceChangedListener shapeChangeListener = event -> updCursor();
+    private Mode mode = Mode.None;
+    private Mode nextMode = Mode.None;
+    private Color selectedColor = Color.red;
+    private Point drawStartPos;
+    private Point mousePos;
     public MagicWandAction() {
         super(tr("Magic Wand"), "magic-wand", tr("Magic wand"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
 
@@ -217,7 +206,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         updateStatusLine();
     }
 
-
     @Override
     public void mousePressed(MouseEvent e) {
         Logging.info("-------- mousePressed -----------");
@@ -249,7 +237,6 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
             Logging.error(ex);
         }
     }
-
 
     private void drawingFinish(MouseEvent e) throws Exception {
 
@@ -309,7 +296,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         if (geometriesSimplify.isEmpty()) return;
         String tagKey = "";
         String tagValue = "";
-        if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
+        if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
             List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
             tagKey = strings.get(0);
             tagValue = strings.get(1);
@@ -324,5 +311,9 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private void cleanMasks() {
         mat_mask = null;
         mat_image = null;
+    }
+
+    private enum Mode {
+        None, Drawing
     }
 }

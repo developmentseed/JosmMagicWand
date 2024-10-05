@@ -20,16 +20,16 @@ import static org.openstreetmap.josm.gui.MainApplication.getMap;
 
 public class ImagePanel extends JPanel {
 
-    private BufferedImage image;
+    private final BufferedImage image;
     private JButton zoomJButton;
     private JButton deleteJButton;
-    private int maxHeight;
-    private int maxWidth;
+    private final int maxHeight;
+    private final int maxWidth;
 
-    private SamImage samImage;
+    private final SamImage samImage;
 
-    private JLabel imageLabel;
-    private ImagePanelListener listener;
+    private final JLabel imageLabel;
+    private final ImagePanelListener listener;
 
     public ImagePanel(SamImage samImage, int maxWidth, ImagePanelListener listener) {
         setLayout(null);

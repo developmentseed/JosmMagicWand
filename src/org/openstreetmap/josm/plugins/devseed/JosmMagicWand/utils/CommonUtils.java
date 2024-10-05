@@ -39,6 +39,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
+
 public class CommonUtils {
     // IMAGE
     public static Mat bufferedImage2Mat(BufferedImage bi) {
@@ -196,16 +197,12 @@ public class CommonUtils {
         return outputImage;
     }
 
-    private Mat getKernelFromShape(int elementSize, int elementShape) {
-        return Imgproc.getStructuringElement(elementShape, new Size(elementSize * 2 + 1, elementSize * 2 + 1), new Point(elementSize, elementSize));
-    }
-    // GEOMETRY SIMPLIFY
-
     public static Geometry simplifyDouglasP(Geometry g, double distance) {
         Geometry result = DouglasPeuckerSimplifier.simplify(g, distance);
         Logging.info("-- simplifyDouglasP -- " + distance + " -- " + g.getNumPoints() + " -- " + result.getNumPoints());
         return result;
     }
+    // GEOMETRY SIMPLIFY
 
     public static Geometry simplifyPolygonHull(Geometry g, double vertex) {
         Geometry result = PolygonHullSimplifier.hull(g, true, vertex);
@@ -295,7 +292,7 @@ public class CommonUtils {
                 }
                 index++;
             }
-            if(!(tagMapKey.isBlank() || tagMapValue.isBlank()) ){
+            if (!(tagMapKey.isBlank() || tagMapValue.isBlank())) {
                 w.setKeys(new TagMap(tagMapKey, tagMapValue));
             }
             cmds.add(new AddCommand(ds, w));
@@ -551,10 +548,14 @@ public class CommonUtils {
             }
         } else if (geometry instanceof Polygon) {
             if (geometry.getNumPoints() > 5 && geometry.isValid()) {
-                polygons.add((Polygon) geometry);
+                polygons.add(geometry);
             }
         }
 
         return polygons;
+    }
+
+    private Mat getKernelFromShape(int elementSize, int elementShape) {
+        return Imgproc.getStructuringElement(elementShape, new Size(elementSize * 2 + 1, elementSize * 2 + 1), new Point(elementSize, elementSize));
     }
 }

@@ -31,12 +31,13 @@ public class SamImage {
 
 
     @JsonIgnore
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    @JsonIgnore
     private BufferedImage layerImage;
     @JsonIgnore
     private ProjectionBounds projectionBounds;
     @JsonIgnore
     private Projection projection;
-
     @JsonIgnore
     private EastNorth center;
     //    image
@@ -63,7 +64,6 @@ public class SamImage {
     private List<Double> bbox;
     @JsonProperty("bbox4326")
     private List<Double> bbox4326;
-
     @JsonIgnore
     private Polygon bboxPolygon;
     @JsonIgnore
@@ -76,14 +76,11 @@ public class SamImage {
     // image shape
     @JsonProperty("imageShape")
     private List<Integer> imageShape;
-
     // utils
     @JsonIgnore
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     @JsonIgnore
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    @JsonIgnore
-    private OkHttpClient client;
+    private final OkHttpClient client;
 
 
     public SamImage(ProjectionBounds projectionBounds, Projection currentProjection, Double zoom, BufferedImage layerImage, String layerName) {

@@ -12,12 +12,12 @@ import java.util.Random;
 public class FloodFillFacade {
 
     public static final int FIXED_RANGE = 1;
+    private final Random random = new Random();
+    private final int newMaskVal = 255;
     private boolean colored = true;
     private boolean masked = true;
     private int range = FIXED_RANGE;
-    private final Random random = new Random();
     private int connectivity = 8;
-    private final int newMaskVal = 255;
     private int lowerDiff = 7;
     private int upperDiff = 9;
 
@@ -40,7 +40,7 @@ public class FloodFillFacade {
 
         Scalar lowerDifference = new Scalar(lowerDiff, lowerDiff, lowerDiff);
         Scalar upperDifference = new Scalar(upperDiff, upperDiff, upperDiff);
-        Logging.info("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity "+ connectivity);
+        Logging.info("lowerDiff " + lowerDiff + " upperDiff " + upperDiff + " connectivity " + connectivity);
         int flags = connectivity + (newMaskVal << 8) + (range == FIXED_RANGE ? Imgproc.FLOODFILL_FIXED_RANGE : 0);
         //Imgproc.FLOODFILL_MASK_ONLY);
         Imgproc.floodFill(image, mask, seedPoint, newVal, rect, lowerDifference, upperDifference, flags);

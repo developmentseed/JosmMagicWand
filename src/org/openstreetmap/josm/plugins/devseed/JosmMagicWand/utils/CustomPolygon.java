@@ -7,18 +7,19 @@ import org.openstreetmap.josm.tools.Logging;
 import java.util.UUID;
 
 public class CustomPolygon {
-    private Polygon pol;
     private final String id;
+    private Polygon pol;
     private boolean isUse;
     private Way way;
 
-    @Override
-    public String toString() {
-        return "CustomPolygon [id=" + id + ", isUse=" + isUse +"]";
-    }
     public CustomPolygon() {
         this.id = UUID.randomUUID().toString();
         this.isUse = false;
+    }
+
+    @Override
+    public String toString() {
+        return "CustomPolygon [id=" + id + ", isUse=" + isUse + "]";
     }
 
     public void fromWay(Way w) {

@@ -8,10 +8,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+
 public class SamImageGrid extends JPanel implements ImagePanelListener {
-    private ArrayList<SamImage> samImageList;
-    private int maxWidth;
     ObjectMapper objectMapper = new ObjectMapper();
+    private final ArrayList<SamImage> samImageList;
+    private final int maxWidth;
 
     public SamImageGrid(int maxWidth) {
         this.maxWidth = maxWidth;
@@ -60,7 +61,7 @@ public class SamImageGrid extends JPanel implements ImagePanelListener {
     private void updateJpanel() {
         removeAll();
         for (SamImage samImage : samImageList) {
-            add(new ImagePanel(samImage, this.maxWidth,this));
+            add(new ImagePanel(samImage, this.maxWidth, this));
         }
         revalidate();
         repaint();

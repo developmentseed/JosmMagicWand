@@ -93,7 +93,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
         try {
             String tagKey = "";
             String tagValue = "";
-            if (ToolSettings.getAutoTags()!= null && !ToolSettings.getAutoTags().isEmpty()){
+            if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
                 List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
                 tagKey = strings.get(0);
                 tagValue = strings.get(1);

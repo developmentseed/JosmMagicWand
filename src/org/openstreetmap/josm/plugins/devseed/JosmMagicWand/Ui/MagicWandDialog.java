@@ -30,9 +30,9 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListener {
     // variables
     private SamImageGrid samImageGrid;
-    private JPanel mainJpanel;
+    private final JPanel mainJpanel;
     private OsmDataLayer uneditableLayer = null;
-    private boolean canSamAoi = false;
+    private final boolean canSamAoi = false;
 
     public MagicWandDialog() {
         super(tr("Magic Wand"), "magicwand-info.svg", tr("Open MagicWand windows"), null, 200, false);
@@ -68,7 +68,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     private JPanel buildTolerancePanel() {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
-        jpanel.setPreferredSize(new Dimension(0,25));
+        jpanel.setPreferredSize(new Dimension(0, 25));
         int initValue = 9;
         TitledBorder titledBorder = BorderFactory.createTitledBorder("Tolerance:  " + initValue);
         jpanel.setBorder(titledBorder);
@@ -94,7 +94,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     private JPanel buildPolygonHullPanel() {
         JPanel jpanel = new JPanel();
         jpanel.setLayout(new BoxLayout(jpanel, BoxLayout.Y_AXIS));
-        jpanel.setPreferredSize(new Dimension(0,25));
+        jpanel.setPreferredSize(new Dimension(0, 25));
         //
         double decimalPlaces = Math.pow(10, 3);
         double min = 0.5;

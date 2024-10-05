@@ -6,6 +6,9 @@ public class LayerImageValues {
     BufferedImage bufferedImage;
     String layerName;
 
+    public LayerImageValues() {
+    }
+
     public BufferedImage getBufferedImage() {
         return bufferedImage;
     }
@@ -20,9 +23,6 @@ public class LayerImageValues {
 
     public void setLayerName(String layerName) {
         this.layerName = layerName;
-    }
-
-    public LayerImageValues() {
     }
 
 }

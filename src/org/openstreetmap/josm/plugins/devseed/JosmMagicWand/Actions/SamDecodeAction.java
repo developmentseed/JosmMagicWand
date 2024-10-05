@@ -9,7 +9,6 @@ import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.projection.Projection;
-import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
@@ -34,18 +33,11 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class SamDecodeAction extends MapMode implements MouseListener {
     private static final Cursor CURSOR_CUSTOM = ImageProvider.getCursor("crosshair", "magic-wand-sam");
-
-
-    private enum Mode {
-        None, Drawing
-    }
-
     private Mode mode = Mode.None;
-    private Mode nextMode = Mode.None;
+    private final Mode nextMode = Mode.None;
     private Point drawStartPos;
     private Point mousePos;
-    private ImageSamPanelListener listener;
-
+    private final ImageSamPanelListener listener;
     public SamDecodeAction(ImageSamPanelListener listener) {
         super(tr("Magic Wand SAM"), "magic-wand-sam", tr("Magic Wand SAM action"), null, ImageProvider.getCursor("crosshair", null));
         this.listener = listener;
@@ -85,7 +77,6 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         if (mode != Mode.None) map.mapView.repaint();
         mode = Mode.None;
     }
-
 
     public final void cancelDrawing() {
         mode = Mode.None;
@@ -167,6 +158,10 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         UndoRedoHandler.getInstance().add(new SequenceCommand(tr("generate sam ways"), cmds));
         return !cmds.isEmpty();
 
+    }
+
+    private enum Mode {
+        None, Drawing
     }
 }
 

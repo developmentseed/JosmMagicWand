@@ -6,14 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ToolSettings {
-    private ToolSettings() {
-    }
-
     private static int tolerance;
     private static int maskClose;
     private static int maskMedian;
     private static int maskOpen;
-
     // simplify
     private static double simplDouglasP;
     private static double simplPolygonHull;
@@ -25,10 +21,13 @@ public final class ToolSettings {
     private static String autoTags;
     // sam images
     private static List<SamImage> samImagesList = new ArrayList<>();
+    private ToolSettings() {
+    }
 
     public static List<SamImage> getSamImagesList() {
         return samImagesList;
     }
+
     public static void setSamImagesList(List<SamImage> samImagesList) {
         ToolSettings.samImagesList = samImagesList;
     }
@@ -36,6 +35,7 @@ public final class ToolSettings {
     public static void setSamImage(SamImage samImage) {
         ToolSettings.samImagesList.add(samImage);
     }
+
     public static void clearSamImagesList() {
         ToolSettings.samImagesList.clear();
     }

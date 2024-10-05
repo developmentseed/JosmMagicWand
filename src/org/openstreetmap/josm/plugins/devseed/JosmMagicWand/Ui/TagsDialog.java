@@ -24,7 +24,7 @@ public class TagsDialog extends ExtendedDialog {
         mainPanel = new JPanel(new GridBagLayout());
 
         mainPanel.add(new JLabel("<html> Auto add tags"
-                +"<br><br>"+tr("Please add in the format: key=value")), GBC.eol().fill(GBC.HORIZONTAL));
+                + "<br><br>" + tr("Please add in the format: key=value")), GBC.eol().fill(GBC.HORIZONTAL));
 
         addTags.setEditable(true);
         addTags.getModel().prefs().load("magicwand.tags-history");
@@ -34,7 +34,7 @@ public class TagsDialog extends ExtendedDialog {
         if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
             addTags.setText(ToolSettings.getAutoTags());
 
-       }
+        }
 
         setContent(mainPanel, false);
         setupDialog();

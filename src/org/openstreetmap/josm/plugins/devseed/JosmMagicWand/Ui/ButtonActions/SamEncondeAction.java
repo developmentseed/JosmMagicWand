@@ -19,7 +19,7 @@ import java.util.List;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class SamEncondeAction extends JosmAction {
-    private ImageSamPanelListener listener;
+    private final ImageSamPanelListener listener;
 
     public SamEncondeAction(ImageSamPanelListener listener) {
         super(tr("SAM AOI"), "dialogs/magic-wand-encode", tr("Add a new SAM AOI"),
@@ -42,7 +42,7 @@ public class SamEncondeAction extends JosmAction {
 
         if (hasMapLayer) {
             LayerImageValues layerImageValues = getLayeredImage(mapView);
-            SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(),mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
+            SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(), mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
 
             // effect
             setEnabled(false);
