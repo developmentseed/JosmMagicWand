@@ -133,27 +133,28 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         String tagValue = "";
 
         LatLon latLon = mapView.getLatLon(e.getX(), e.getY());
-        Projection projection = ProjectionRegistry.getProjection();
-        EastNorth eastNorth = latLon.getEastNorth(projection);
-
+        Projection currentProjection = mapView.getProjection();
+        EastNorth eastNorth = latLon.getEastNorth(currentProjection);
 
         SamImage samImage = listener.getSamImageIncludepoint(eastNorth.getX(), eastNorth.getY());
         if (samImage == null) {
             new Notification(tr("Click inside of active AOI to enable Segment Anything Model.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return false;
         }
+        Projection epsg4326 = Projections.getProjectionByCode("EPSG:4326");
+        EastNorth eastNort4326 = epsg4326.latlon2eastNorth(latLon);
 
-        List<Geometry> geometrySamList = samImage.fetchDecodePoint(eastNorth.getX(), eastNorth.getY());
+
+        List<Geometry> geometrySamList = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
         if (geometrySamList.isEmpty()) {
             new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return false;
         }
-
-        Projection projectionSam = Projections.getProjectionByCode("EPSG:4326");
+        // 4326
         List<Geometry> geometriesMercator = new ArrayList<>();
 
         for (Geometry samGeometry : geometrySamList) {
-            var nodesMercator = CommonUtils.coordinates2Nodes(Arrays.asList(samGeometry.getCoordinates()), projectionSam);
+            var nodesMercator = CommonUtils.coordinates2Nodes(Arrays.asList(samGeometry.getCoordinates()), epsg4326);
             var coordMercator = CommonUtils.nodes2Coordinates(nodesMercator);
             var geometry = CommonUtils.coordinates2Polygon(coordMercator);
             var geometrySimPolygonHull = CommonUtils.simplifyPolygonHull(geometry.copy(), 0.95);

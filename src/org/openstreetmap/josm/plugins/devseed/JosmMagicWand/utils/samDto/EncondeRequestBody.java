@@ -1,7 +1,6 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto;
 
 import java.util.List;
-import java.util.UUID;
 
 public class EncondeRequestBody {
     private String canvas_image;

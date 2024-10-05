@@ -1,4 +1,4 @@
-package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
+package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto;
 
 public class EncodeResponse {
     private String project;

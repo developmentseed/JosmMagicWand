@@ -3,6 +3,7 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import okhttp3.*;
@@ -15,6 +16,9 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.Projections;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.DecodeRequestBody;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncodeResponse;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncondeRequestBody;
 import org.openstreetmap.josm.tools.Logging;
 
 import java.awt.image.BufferedImage;
@@ -75,11 +79,11 @@ public class SamImage {
 
     // utils
     @JsonIgnore
-    private final ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
     @JsonIgnore
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     @JsonIgnore
-    private final OkHttpClient client;
+    private OkHttpClient client;
 
 
     public SamImage(ProjectionBounds projectionBounds, Projection currentProjection, Double zoom, BufferedImage layerImage, String layerName) {
@@ -193,7 +197,7 @@ public class SamImage {
         String filePath = magicWandDirPath + File.separator + fileName;
         try {
             File file = new File(filePath);
-            objectMapper.writeValue(file, this);
+            this.objectMapper.writeValue(file, this);
 
             Logging.info("Object save in : " + filePath);
         } catch (Exception e) {
@@ -203,13 +207,13 @@ public class SamImage {
     }
 
     public void updateCacheImage() {
-        saveCache(nameObject);
+        saveCache(this.nameObject);
     }
 
     public void removeCacheImge() {
         try {
             String magicWandDirPath = CommonUtils.magicWandCacheDirPath();
-            String filePath = magicWandDirPath + File.separator + nameObject;
+            String filePath = magicWandDirPath + File.separator + this.nameObject;
             File file = new File(filePath);
             file.delete();
         } catch (Exception e) {
@@ -219,11 +223,10 @@ public class SamImage {
     }
 
 
-
     public void setEncodeImage() {
         try {
             // request body
-            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(),"josm_magic_wand", getZoom().intValue(), getBbox4326(), getId());
+            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), "josm_magic_wand", 12, getBbox4326(), getId());
             String requestBodyJson = this.objectMapper.writeValueAsString(encodeRequestBody);
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 
@@ -237,6 +240,7 @@ public class SamImage {
             String responseData = response.body().string();
             EncodeResponse encodeResponse = this.objectMapper.readValue(responseData, EncodeResponse.class);
             // update some fields
+            setProjectName(encodeResponse.getProject());
             setTifUrl(encodeResponse.getTifUrl());
             setImageUrl(encodeResponse.getImageUrl());
             setEncode(true);
@@ -260,71 +264,49 @@ public class SamImage {
         return geometryFactory.createPolygon(vertices);
     }
 
-    public List<Geometry> fetchDecodePoint(double x, double y) {
+    public List<Geometry> fetchDecodePoint(Double x, Double y) {
         List<Geometry> geometryList = new ArrayList<>();
-        GeoJsonReader reader = new GeoJsonReader();
-        return  geometryList;
-//        try {
-//
-//            // request body
-//            Coordinate clickCoordinate = mouseClick2Coordinate(x, y);
-//
-//            DecondeRequestBody decodeRequestBody = new DecondeRequestBody(getBbox(), getImageEmbedding(), getImageShape(), Arrays.asList((int) clickCoordinate.x, (int) clickCoordinate.y));
-//            String requestBodyJson = objectMapper.writeValueAsString(decodeRequestBody);
-//            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-//            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
-//            //    client
-//
-//            OkHttpClient client = new OkHttpClient.Builder()
-//                    .connectTimeout(3, TimeUnit.SECONDS)
-//                    .readTimeout(3, TimeUnit.SECONDS)
-//                    .build();
-//
-//
-//            Request request = new Request.Builder()
-//                    .url(Constants.DECODE_URL)
-//                    .post(requestBody)
-//                    .build();
-//
-//            Response response = client.newCall(request).execute();
-//
-//            if (response.isSuccessful()) {
-//                String responseData = response.body().string();
-//                Map<String, Object> dataMap = objectMapper.readValue(responseData, Map.class);
-//                if (dataMap.getOrDefault("status", "").equals("success")) {
-//                    List<String> geojsonsList = (List<String>) dataMap.get("geojsons");
-//                    List<Double> geojsonConfidence = (List<Double>) dataMap.get("confidence_scores");
-//                    Double maxVal = Collections.max(geojsonConfidence);
-//                    Integer maxIdx = geojsonConfidence.indexOf(maxVal);
-//                    Geometry geometryJson = reader.read(geojsonsList.get(maxIdx));
-//                    // validate geometry
-//                    geometryList = CommonUtils.extractPolygons(geometryJson);
-//                }
-//            }
-//
-//        } catch (Exception e) {
-//            Logging.error(e);
-//        }
-//        return CommonUtils.filterByArea(geometryList, 0.1);
+        GeoJsonReader geoJsonReader = new GeoJsonReader();
+        try {
+
+            // request body
+            DecodeRequestBody decodeRequestBody = new DecodeRequestBody("single_point", getBbox4326(), getId(), List.of(Arrays.asList(x, y)), List.of(1), getProjectName(), 12);
+
+            String requestBodyJson = this.objectMapper.writeValueAsString(decodeRequestBody);
+            RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
+            Request request = new Request.Builder()
+                    .url(Constants.DECODE_URL)
+                    .post(requestBody)
+                    .build();
+
+            Response response = this.client.newCall(request).execute();
+            if (response.isSuccessful()) {
+                String responseData = response.body().string();
+
+                JsonNode rootNode = this.objectMapper.readTree(responseData);
+
+                if (rootNode.has("type") && "FeatureCollection".equals(rootNode.get("type").asText())) {
+                    JsonNode featuresArray = rootNode.get("features");
+                    Iterator<JsonNode> featuresIterator = featuresArray.elements();
+
+                    while (featuresIterator.hasNext()) {
+                        JsonNode feature = featuresIterator.next();
+                        Geometry geometry = geoJsonReader.read(feature.get("geometry").toString());
+                        if (geometry != null && geometry.getNumPoints() >= 7) {
+                            geometryList.add(geometry);
+                        }
+                    }
+                } else {
+                    System.out.println("The GeoJSON  has not FeatureCollection");
+                }
+            }
+
+        } catch (Exception e) {
+            Logging.error(e);
+        }
+        return geometryList;
     }
-
-    public Coordinate mouseClick2Coordinate(double x, double y) {
-        double minX = getBbox().get(0);
-        double minY = getBbox().get(1);
-        double maxX = getBbox().get(2);
-        double maxY = getBbox().get(3);
-
-        // image size
-        int bboxHeight = getImageShape().get(0);
-        int bboxWidth = getImageShape().get(1);
-
-        //  factor (nx, ny)
-        double nx = (x - minX) / (maxX - minX);
-        double ny = (y - minY) / (maxY - minY);
-        // Y i invert
-        return new Coordinate(nx * bboxWidth, (1 - ny) * bboxHeight);
-    }
-
 
     public boolean containsPoint(Point p) {
         try {
