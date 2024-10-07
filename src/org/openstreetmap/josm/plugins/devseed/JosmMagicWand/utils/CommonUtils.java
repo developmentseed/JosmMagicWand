@@ -271,11 +271,11 @@ public class CommonUtils {
             if (geometry.getNumGeometries() > 1) {
                 for (int j = 0; j < geometry.getNumGeometries(); j++) {
                     geometriesSplit.add(geometry.union());
-                    System.out.println("geom interno");
+                    Logging.error("geom interno");
                 }
             } else {
                 geometriesSplit.add(geometry.union());
-                System.out.println("geom externo");
+                Logging.error("geom externo");
             }
         }
 

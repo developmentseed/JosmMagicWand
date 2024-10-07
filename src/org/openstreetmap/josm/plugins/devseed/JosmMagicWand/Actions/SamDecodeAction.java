@@ -109,7 +109,7 @@ public class SamDecodeAction extends MapMode implements MouseListener {
                 new Notification(tr("Error data generation.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             }
             SwingUtilities.invokeLater(() -> {
-                System.out.println("later");
+                Logging.error("later");
             });
         });
         apiThread.start();

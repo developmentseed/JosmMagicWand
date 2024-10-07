@@ -23,6 +23,20 @@ public class DecodeRequestBody {
         this.zoom = zoom;
     }
 
+    @Override
+    public String toString() {
+        return "DecodeRequestBody{" +
+                "action_type='" + action_type + '\'' +
+                ", bbox=" + bbox +
+                ", crs='" + crs + '\'' +
+                ", id='" + id + '\'' +
+                ", point_coords=" + point_coords +
+                ", point_labels=" + point_labels +
+                ", project='" + project + '\'' +
+                ", zoom=" + zoom +
+                '}';
+    }
+
     public String getAction_type() {
         return action_type;
     }

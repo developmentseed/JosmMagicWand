@@ -92,6 +92,7 @@ public class SamImage {
                 layerImage.getHeight(), layerImage.getWidth()
         )));
         this.setZoom(zoom);
+        this.setProjectName("josm_magic_wand_dev");
         // projectionBounds
         this.setCrs(currentProjection.toCode());
         this.setCenter(projectionBounds.getCenter());
@@ -118,9 +119,9 @@ public class SamImage {
 
         this.setBbox4326(new ArrayList<>(Arrays.asList(
                 topLeft4326.getX(),
-                topLeft4326.getY(),
+                bottomRight4326.getY(),
                 bottomRight4326.getX(),
-                bottomRight4326.getY()
+                topLeft4326.getY()
         )));
 
         this.setNameObject(CommonUtils.getDateTime() + "__" + CommonUtils.getMapLayerName(layerName) + ".json");
@@ -128,7 +129,7 @@ public class SamImage {
         saveCache(this.getNameObject());
         // api client
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
         this.objectMapper = new ObjectMapper();
@@ -178,7 +179,7 @@ public class SamImage {
         this.setBboxWay(createBboxWay());
         //  fetch data
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
         this.objectMapper = new ObjectMapper();
@@ -223,7 +224,7 @@ public class SamImage {
     public void setEncodeImage() {
         try {
             // request body
-            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), "josm_magic_wand", 12, getBbox4326(), getId());
+            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
             String requestBodyJson = this.objectMapper.writeValueAsString(encodeRequestBody);
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 
@@ -237,10 +238,10 @@ public class SamImage {
             String responseData = response.body().string();
             EncodeResponse encodeResponse = this.objectMapper.readValue(responseData, EncodeResponse.class);
             // update some fields
-            setProjectName(encodeResponse.getProject());
             setTifUrl(encodeResponse.getTifUrl());
             setImageUrl(encodeResponse.getImageUrl());
             setEncode(true);
+
         } catch (Exception e) {
             Logging.error(e);
             setEncode(false);
@@ -295,12 +296,14 @@ public class SamImage {
                         }
                     }
                 } else {
-                    System.out.println("The GeoJSON  has not FeatureCollection");
+                    Logging.error("The GeoJSON  has not FeatureCollection");
                 }
+            }else {
+                Logging.error(response.body().string());
             }
 
         } catch (Exception e) {
-            Logging.error(e);
+            Logging.error(e.toString());
         }
         return geometryList;
     }

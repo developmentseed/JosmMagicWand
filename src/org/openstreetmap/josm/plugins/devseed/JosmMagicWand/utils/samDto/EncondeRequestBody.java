@@ -19,6 +19,18 @@ public class EncondeRequestBody {
         this.bbox = bbox;
     }
 
+    @Override
+    public String toString() {
+        return "EncondeRequestBody{" +
+                "bbox=" + bbox +
+                ", canvas_image='" + canvas_image + '\'' +
+                ", crs='" + crs + '\'' +
+                ", id='" + id + '\'' +
+                ", project='" + project + '\'' +
+                ", zoom=" + zoom +
+                '}';
+    }
+
     public Integer getZoom() {
         return zoom;
     }
