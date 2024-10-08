@@ -32,7 +32,7 @@ public class SamImageGrid extends JPanel implements ImagePanelListener {
                 public int compare(File file1, File file2) {
                     LocalDateTime dateTime1 = extractDateTimeFromFileName(file1.getName());
                     LocalDateTime dateTime2 = extractDateTimeFromFileName(file2.getName());
-                    return dateTime2.compareTo(dateTime1);
+                    return dateTime1.compareTo(dateTime2);
                 }
             });
         }
@@ -49,7 +49,7 @@ public class SamImageGrid extends JPanel implements ImagePanelListener {
     }
     public void addSamImage(SamImage samImage) {
         if (samImage.isEncode() && !samImage.getImageUrl().isEmpty()) {
-            samImageList.add(samImage);
+            samImageList.add(0, samImage);
         }
         updateJpanel();
     }

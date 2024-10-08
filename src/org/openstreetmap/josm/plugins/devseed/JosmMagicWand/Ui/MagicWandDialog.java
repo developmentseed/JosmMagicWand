@@ -11,6 +11,8 @@ import org.openstreetmap.josm.gui.SideButton;
 import org.openstreetmap.josm.gui.dialogs.ToggleDialog;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.SamEncondeAction;
@@ -57,12 +59,16 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         // layer
         initLayer();
         //  buttons
+        // mege
+        SideButton mergeGeometry = new SideButton(new MergeSelectAction());
+        SideButton simplifyGeometry = new SideButton(new SimplifySelectAction());
+
         //  add
         SideButton addTagButton = new SideButton(new AutoAddTagAction());
         // sam
         SideButton samButton = new SideButton(new SamEncondeAction(this));
 
-        createLayout(mainJpanel, true, Arrays.asList(addTagButton, samButton));
+        createLayout(mainJpanel, true, Arrays.asList(mergeGeometry,simplifyGeometry, addTagButton, samButton));
     }
 
     private JPanel buildTolerancePanel() {
@@ -220,7 +226,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
     }
 
     private JPanel buildSamImagesPanel() {
-        samImageGrid = new SamImageGrid(130);
+        samImageGrid = new SamImageGrid(150);
         samImageGrid.setLayout(new GridLayout(0, 2, 2, 3));
 
         return samImageGrid;
