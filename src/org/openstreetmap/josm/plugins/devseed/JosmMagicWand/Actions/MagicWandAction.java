@@ -55,6 +55,7 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
     private Color selectedColor = Color.red;
     private Point drawStartPos;
     private Point mousePos;
+
     public MagicWandAction() {
         super(tr("Magic Wand"), "magic-wand", tr("Magic wand"), Shortcut.registerShortcut("mapmode:magicwandadd", tr("Mode: {0}", tr("Magic wand add")), KeyEvent.VK_1, Shortcut.CTRL), ImageProvider.getCursor("crosshair", null));
 
@@ -298,8 +299,10 @@ public class MagicWandAction extends MapMode implements MapViewPaintable, KeyPre
         String tagValue = "";
         if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
             List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
-            tagKey = strings.get(0);
-            tagValue = strings.get(1);
+            if (strings.size() > 1) {
+                tagKey = strings.get(0);
+                tagValue = strings.get(1);
+            }
         }
 
         Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesSimplify, tagKey, tagValue);

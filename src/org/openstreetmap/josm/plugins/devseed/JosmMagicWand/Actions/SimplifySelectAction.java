@@ -89,8 +89,10 @@ public class SimplifySelectAction extends JosmAction implements DataSelectionLis
             String tagValue = "";
             if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
                 List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
-                tagKey = strings.get(0);
-                tagValue = strings.get(1);
+                if (strings.size() > 1) {
+                    tagKey = strings.get(0);
+                    tagValue = strings.get(1);
+                }
             }
             Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometrySimplify, tagKey, tagValue);
             UndoRedoHandler.getInstance().add(new SequenceCommand(tr("simplify way"), cmds));

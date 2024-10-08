@@ -129,7 +129,7 @@ public class SamImage {
         saveCache(this.getNameObject());
         // api client
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
         this.objectMapper = new ObjectMapper();
@@ -179,7 +179,7 @@ public class SamImage {
         this.setBboxWay(createBboxWay());
         //  fetch data
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .build();
         this.objectMapper = new ObjectMapper();

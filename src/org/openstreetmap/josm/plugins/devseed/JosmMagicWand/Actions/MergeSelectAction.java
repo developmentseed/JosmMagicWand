@@ -38,7 +38,7 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (!isEnabled()) return;
-        final Collection<Way> selWays = getSelectedWays();
+        Collection<Way> selWays = getSelectedWays();
         if (selWays.isEmpty()) {
             new Notification(tr("No ways selected.")).setIcon(JOptionPane.WARNING_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return;
@@ -95,8 +95,10 @@ public class MergeSelectAction extends JosmAction implements DataSelectionListen
             String tagValue = "";
             if (ToolSettings.getAutoTags() != null && !ToolSettings.getAutoTags().isEmpty()) {
                 List<String> strings = Arrays.asList(ToolSettings.getAutoTags().split("="));
-                tagKey = strings.get(0);
-                tagValue = strings.get(1);
+                if (strings.size() > 1) {
+                    tagKey = strings.get(0);
+                    tagValue = strings.get(1);
+                }
             }
             Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometries, tagKey, tagValue);
             UndoRedoHandler.getInstance().add(new SequenceCommand(tr("draw merge way"), cmds));
