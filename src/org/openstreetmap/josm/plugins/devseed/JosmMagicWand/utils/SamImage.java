@@ -12,10 +12,16 @@ import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.Projections;
+import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
+import org.openstreetmap.josm.gui.progress.ProgressMonitor;
+import org.openstreetmap.josm.io.GeoJSONReader;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.DecodeRequestBody;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncodeResponse;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncondeRequestBody;
@@ -23,13 +29,14 @@ import org.openstreetmap.josm.tools.Logging;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @JsonRootName(value = "SamImage")
 public class SamImage {
-
-
     @JsonIgnore
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     @JsonIgnore
@@ -123,17 +130,18 @@ public class SamImage {
                 bottomRight4326.getX(),
                 topLeft4326.getY()
         )));
-
         this.setNameObject(CommonUtils.getDateTime() + "__" + CommonUtils.getMapLayerName(layerName) + ".json");
         this.setLayerName(layerName);
-        saveCache(this.getNameObject());
         // api client
-        this.client = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+        client = new OkHttpClient.Builder()
+                .connectTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(40, TimeUnit.SECONDS)
                 .build();
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+
+        //
+        saveCache(this.getNameObject());
 
     }
 
@@ -178,29 +186,28 @@ public class SamImage {
         this.setBboxPolygon(createPolygonFromDoubles(bbox));
         this.setBboxWay(createBboxWay());
         //  fetch data
-        this.client = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+        client = new OkHttpClient.Builder()
+                .connectTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(40, TimeUnit.SECONDS)
                 .build();
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        objectMapper = new ObjectMapper();
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
     }
 
     private void saveCache(String fileName) {
-        if (!CommonUtils.existCacheDir()) {
-            CommonUtils.createCacheDir();
-        }
-        String magicWandDirPath = CommonUtils.magicWandCacheDirPath();
-        String filePath = magicWandDirPath + File.separator + fileName;
         try {
-            File file = new File(filePath);
-            this.objectMapper.writeValue(file, this);
 
+            if (!CommonUtils.existCacheDir()) {
+                CommonUtils.createCacheDir();
+            }
+            String magicWandDirPath = CommonUtils.magicWandCacheDirPath();
+            String filePath = magicWandDirPath + File.separator + fileName;
+            File file = new File(filePath);
+            objectMapper.writeValue(file, this);
             Logging.info("Object save in : " + filePath);
         } catch (Exception e) {
-            Logging.error(e);
-            e.printStackTrace();
+            Logging.warn(e);
         }
     }
 
@@ -225,18 +232,18 @@ public class SamImage {
         try {
             // request body
             EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
-            String requestBodyJson = this.objectMapper.writeValueAsString(encodeRequestBody);
+            String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 
             Request request = new Request.Builder()
-                    .url(Constants.ENCODE_URL)
+                    .url(Constants.ENCODE)
                     .post(requestBody)
                     .build();
             // response
-            Response response = this.client.newCall(request).execute();
+            Response response = client.newCall(request).execute();
 
             String responseData = response.body().string();
-            EncodeResponse encodeResponse = this.objectMapper.readValue(responseData, EncodeResponse.class);
+            EncodeResponse encodeResponse = objectMapper.readValue(responseData, EncodeResponse.class);
             // update some fields
             setTifUrl(encodeResponse.getTifUrl());
             setImageUrl(encodeResponse.getImageUrl());
@@ -249,19 +256,6 @@ public class SamImage {
 
     }
 
-    public Polygon createPolygonFromDoubles(List<Double> coordinates) {
-        Coordinate[] vertices = {
-                new Coordinate(coordinates.get(0), coordinates.get(1)),
-                new Coordinate(coordinates.get(0), coordinates.get(3)),
-                new Coordinate(coordinates.get(2), coordinates.get(3)),
-                new Coordinate(coordinates.get(2), coordinates.get(1)),
-                new Coordinate(coordinates.get(0), coordinates.get(1))
-        };
-
-        GeometryFactory geometryFactory = new GeometryFactory();
-        return geometryFactory.createPolygon(vertices);
-    }
-
     public List<Geometry> fetchDecodePoint(Double x, Double y) {
         List<Geometry> geometryList = new ArrayList<>();
         GeoJsonReader geoJsonReader = new GeoJsonReader();
@@ -270,19 +264,19 @@ public class SamImage {
             // request body
             DecodeRequestBody decodeRequestBody = new DecodeRequestBody("single_point", getBbox4326(), getId(), List.of(Arrays.asList(x, y)), List.of(1), getProjectName(), 12);
 
-            String requestBodyJson = this.objectMapper.writeValueAsString(decodeRequestBody);
+            String requestBodyJson = objectMapper.writeValueAsString(decodeRequestBody);
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 
             Request request = new Request.Builder()
-                    .url(Constants.DECODE_URL)
+                    .url(Constants.DECODE)
                     .post(requestBody)
                     .build();
 
-            Response response = this.client.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {
                 String responseData = response.body().string();
 
-                JsonNode rootNode = this.objectMapper.readTree(responseData);
+                JsonNode rootNode = objectMapper.readTree(responseData);
 
                 if (rootNode.has("type") && "FeatureCollection".equals(rootNode.get("type").asText())) {
                     JsonNode featuresArray = rootNode.get("features");
@@ -298,7 +292,7 @@ public class SamImage {
                 } else {
                     Logging.error("The GeoJSON  has not FeatureCollection");
                 }
-            }else {
+            } else {
                 Logging.error(response.body().string());
             }
 
@@ -306,6 +300,68 @@ public class SamImage {
             Logging.error(e.toString());
         }
         return geometryList;
+    }
+
+    public OsmDataLayer autoAnnotateSam() {
+        CommonUtils.createCacheSamDir();
+        if (getEncode() && !getImageUrl().isEmpty()) {
+            try {
+                String filename = "magic_wand_sam_api" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
+                // request body
+                EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
+                String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
+                RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
+
+                Request request = new Request.Builder()
+                        .url(Constants.AUTOMATIC)
+                        .post(requestBody)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                String responseData = response.body().string();
+
+                File tempFile = new File(new File(CommonUtils.magicWandCacheSamDirPath()), filename);
+                try (FileWriter fileWriter = new FileWriter(tempFile)) {
+                    fileWriter.write(responseData);
+                }
+                Logging.info("GeoJSON save in: " + tempFile.getAbsolutePath());
+                // load layer
+                return loadGeoJsonAsLayer(tempFile);
+
+            } catch (Exception e) {
+                Logging.error(e);
+                setEncode(false);
+            }
+        }
+        return null;
+
+    }
+
+    private OsmDataLayer loadGeoJsonAsLayer(File geoJsonFile) {
+        try (InputStream inputStream = new FileInputStream(geoJsonFile)) {
+            ProgressMonitor progressMonitor = NullProgressMonitor.INSTANCE;
+            DataSet dataSet = GeoJSONReader.parseDataSet(inputStream, progressMonitor);
+            OsmDataLayer newLayer = new OsmDataLayer(dataSet, geoJsonFile.getName(), geoJsonFile);
+            MainApplication.getLayerManager().addLayer(newLayer);
+            return newLayer;
+        } catch (Exception e) {
+            Logging.error(e.toString());
+            return null;
+        }
+    }
+
+    // utils
+    public Polygon createPolygonFromDoubles(List<Double> coordinates) {
+        Coordinate[] vertices = {
+                new Coordinate(coordinates.get(0), coordinates.get(1)),
+                new Coordinate(coordinates.get(0), coordinates.get(3)),
+                new Coordinate(coordinates.get(2), coordinates.get(3)),
+                new Coordinate(coordinates.get(2), coordinates.get(1)),
+                new Coordinate(coordinates.get(0), coordinates.get(1))
+        };
+
+        GeometryFactory geometryFactory = new GeometryFactory();
+        return geometryFactory.createPolygon(vertices);
     }
 
     public boolean containsPoint(Point p) {
@@ -413,7 +469,7 @@ public class SamImage {
         this.crs = crs;
     }
 
-    public boolean isEncode() {
+    public boolean getEncode() {
         return isEncode;
     }
 
@@ -484,4 +540,5 @@ public class SamImage {
     public void setBbox4326(List<Double> bbox4326) {
         this.bbox4326 = bbox4326;
     }
+
 }

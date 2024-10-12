@@ -9,6 +9,7 @@ public class EncondeRequestBody {
     private String project;
     private Integer zoom;
     private List<Double> bbox;
+    private String return_format;
 
     public EncondeRequestBody(String canvas_image, String project, Integer zoom, List<Double> bbox, String id) {
         this.canvas_image = canvas_image;
@@ -17,6 +18,7 @@ public class EncondeRequestBody {
         this.project = project;
         this.zoom = zoom;
         this.bbox = bbox;
+        this.return_format = "geojson";
     }
 
     @Override
@@ -77,5 +79,13 @@ public class EncondeRequestBody {
 
     public void setBbox(List<Double> bbox) {
         this.bbox = bbox;
+    }
+
+    public String getReturn_format() {
+        return return_format;
+    }
+
+    public void setReturn_format(String return_format) {
+        this.return_format = return_format;
     }
 }

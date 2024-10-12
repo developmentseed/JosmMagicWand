@@ -11,6 +11,7 @@ import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.photo.Photo;
+import org.openstreetmap.josm.actions.MergeLayerAction;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.data.coor.EastNorth;
@@ -22,11 +23,17 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.preferences.JosmBaseDirectories;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
+import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.LayerManager;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.awt.image.DataBufferByte;
@@ -497,26 +504,37 @@ public class CommonUtils {
 
         return josmCacheDataDir + File.separator + "magicwand";
     }
+    public static String magicWandCacheSamDirPath() {
+        String josmCacheDataDir = JosmBaseDirectories.getInstance().getCacheDirectory(true).toString();
+
+        return josmCacheDataDir + File.separator + "magicwand__sam";
+    }
 
     public static boolean existCacheDir() {
         return new File(magicWandCacheDirPath()).exists();
     }
 
-    public static void createCacheDir() {
-        String magicWandDirPath = magicWandCacheDirPath();
-        File magicWandDir = new File(magicWandDirPath);
+    private static void createDir(String path) {
+        File magicWandDir = new File(path);
         if (!magicWandDir.exists()) {
             boolean wasDirectoryCreated = magicWandDir.mkdir();
 
             if (wasDirectoryCreated) {
-                Logging.info(tr("magicwand " + "Folder 'magicwand' successfully created at: " + magicWandDirPath));
+                Logging.info(tr("magicwand " + "Folder 'magicwand' successfully created at: " + path));
             } else {
-                Logging.info(tr("magicwand " + "Failed to create the 'magicwand' folder at: " + magicWandDirPath));
+                Logging.info(tr("magicwand " + "Failed to create the 'magicwand' folder at: " + path));
             }
         } else {
-            Logging.info(tr("magicwand " + "The 'magicwand' folder already exists at: " + magicWandDirPath));
+            Logging.info(tr("magicwand " + "The 'magicwand' folder already exists at: " + path));
         }
+    }
 
+    public static void createCacheDir() {
+        createDir(magicWandCacheDirPath());
+    }
+
+    public static void createCacheSamDir() {
+        createDir(magicWandCacheSamDirPath());
     }
 
     public static String getDateTime() {
@@ -558,4 +576,53 @@ public class CommonUtils {
     private Mat getKernelFromShape(int elementSize, int elementShape) {
         return Imgproc.getStructuringElement(elementShape, new Size(elementSize * 2 + 1, elementSize * 2 + 1), new Point(elementSize, elementSize));
     }
+
+    public static OsmDataLayer getLayerByName(String layerName) {
+        for (Layer layer : MainApplication.getLayerManager().getLayers()) {
+            if (layer instanceof OsmDataLayer && layer.getName().equals(layerName)) {
+                return (OsmDataLayer) layer;
+            }
+        }
+        return null;
+    }
+
+    public static OsmDataLayer createNewDataLayer(String layerName) {
+        DataSet dataSet = new DataSet();
+        return new OsmDataLayer(dataSet, layerName, null);
+    }
+    public static OsmDataLayer getActiveDataLayerNameOrCreate(String layerName) {
+        OsmDataLayer activeLayer = MainApplication.getLayerManager().getActiveDataLayer();
+
+        if (activeLayer != null) {
+            return activeLayer;
+        }
+        for (OsmDataLayer layer : MainApplication.getLayerManager().getLayersOfType(OsmDataLayer.class)) {
+            if ( layer.isVisible() && layer.isModified()) {
+                return layer;
+            }
+        }
+
+        OsmDataLayer newLayer = createNewDataLayer(layerName);
+        MainApplication.getLayerManager().addLayer(newLayer);
+        MainApplication.getLayerManager().setActiveLayer(newLayer);
+        return newLayer;
+    }
+    public static void mergeLayersByName(OsmDataLayer currentLayer, OsmDataLayer newLayer, String newLayerName) {
+        LayerManager layerManager = MainApplication.getLayerManager();
+
+        if (!layerManager.getLayers().contains(newLayer)) {
+            layerManager.addLayer(newLayer);
+        }
+
+        if (!layerManager.getLayers().contains(currentLayer)) {
+            layerManager.addLayer(currentLayer);
+        }
+
+        MergeLayerAction mergeLayerAction = MainApplication.getMenu().merge;
+        List<Layer> layers = Arrays.asList(currentLayer, newLayer);
+        mergeLayerAction.merge(layers);
+        currentLayer.setName(newLayerName);
+        MainApplication.getLayerManager().removeLayer(newLayer);
+    }
+
 }

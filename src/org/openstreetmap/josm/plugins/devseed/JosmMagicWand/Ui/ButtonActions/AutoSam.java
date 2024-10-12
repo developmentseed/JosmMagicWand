@@ -4,8 +4,11 @@ import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.gui.io.importexport.OsmExporter;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.LayerImageValues;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
@@ -14,15 +17,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-public class SamEncondeAction extends JosmAction {
+public class AutoSam extends JosmAction {
     private final ImageSamPanelListener listener;
 
-    public SamEncondeAction(ImageSamPanelListener listener) {
-        super(tr("SAM AOI"), "dialogs/magic-wand-encode", tr("Add a new SAM AOI"),
+    public AutoSam(ImageSamPanelListener listener) {
+        super(tr("AUTO SAM"), "dialogs/auto-sam", tr("Automatic sam"),
                 null, false);
         this.listener = listener;
     }
@@ -43,30 +47,45 @@ public class SamEncondeAction extends JosmAction {
         if (hasMapLayer) {
             LayerImageValues layerImageValues = getLayeredImage(mapView);
             SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(), mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
-
             // effect
             setEnabled(false);
-            apiThread(samImage);
+            try {
+                apiThreadCreateAoi(samImage);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
 
         } else {
-            new Notification(tr("An active layer is needed.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            new Notification(tr("An Map active layer is needed.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         }
     }
 
-    private void apiThread(SamImage samImage) {
+    private void apiThreadCreateAoi(SamImage samImage) throws IOException {
+//        OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
+//        if (dataActiveLayer.getAssociatedFile() == null || dataActiveLayer.requiresSaveToFile()) {
+//            new Notification(tr("Save changes to the current Data Layer or associate it with a file.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+//            setEnabled(true);
+//            return;
+//        }
+
         Thread apiThread = new Thread(() -> {
             samImage.setEncodeImage();
+            OsmDataLayer newLayerSam = samImage.autoAnnotateSam();
             SwingUtilities.invokeLater(() -> {
-                addSamImage(samImage);
-                samImage.updateCacheImage();
-                setEnabled(true);
+                if (newLayerSam != null) {
+                    addSamImage(samImage);
+//                    CommonUtils.mergeLayersByName(dataActiveLayer, newLayerSam, dataActiveLayer.getName());
+                    samImage.updateCacheImage();
+                    setEnabled(true);
+                }
             });
         });
         apiThread.start();
     }
 
+
     private void addSamImage(SamImage samImage) {
-        if (samImage.getEncode()) {
+        if (samImage.getEncode() && !samImage.getImageUrl().isEmpty()) {
             listener.addLayer();
             listener.addBboxLayer(samImage.getBboxWay());
             listener.onAddSamImage(samImage);
@@ -95,4 +114,6 @@ public class SamEncondeAction extends JosmAction {
 
         return layerImageValues;
     }
+
+
 }

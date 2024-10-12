@@ -69,7 +69,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         // sam
         SideButton samButton = new SideButton(new SamEncondeAction(this));
 
-        createLayout(mainJpanel, true, Arrays.asList(mergeGeometry, simplifyGeometry,autoSamButton, samButton));
+        createLayout(mainJpanel, true, Arrays.asList(mergeGeometry, simplifyGeometry, autoSamButton, samButton));
     }
 
     private JPanel buildTolerancePanel() {
