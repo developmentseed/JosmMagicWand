@@ -11,6 +11,7 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MagicWandAct
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SamDecodeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.MagicWandDialog;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.tools.Logging;
@@ -34,8 +35,10 @@ public class MainJosmMagicWandPlugin extends Plugin {
 
         JMenu jToolmenu = MainApplication.getMenu().toolsMenu;
         jToolmenu.addSeparator();
-        MainMenu.add(jToolmenu, new MergeSelectAction());
-        MainMenu.add(jToolmenu, new SimplifySelectAction());
+        MainMenu.add(jToolmenu, new MergeSelectAction("Merge way"));
+        MainMenu.add(jToolmenu, new SimplifySelectAction("Simplify way"));
+        MainMenu.add(jToolmenu, new AutoAddTagAction("Add default tag"));
+
         // create a folder
         CommonUtils.createCacheDir();
     }

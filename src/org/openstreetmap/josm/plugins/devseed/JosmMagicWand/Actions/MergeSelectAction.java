@@ -31,8 +31,8 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 public class MergeSelectAction extends JosmAction implements DataSelectionListener {
 
 
-    public MergeSelectAction() {
-        super(tr("Merge way"), "mapmode/magic-wand-merge", tr("merge multiple geometries into one"), Shortcut.registerShortcut("data:magicwandmerge", tr("Data: {0}", tr("merge multiple geometries into one")), KeyEvent.VK_3, Shortcut.CTRL), true);
+    public MergeSelectAction(String text) {
+        super(tr(text), "mapmode/magic-wand-merge", tr("merge multiple geometries into one"), Shortcut.registerShortcut("data:magicwandmerge", tr("Data: {0}", tr("merge multiple geometries into one")), KeyEvent.VK_3, Shortcut.CTRL), true);
     }
 
     @Override

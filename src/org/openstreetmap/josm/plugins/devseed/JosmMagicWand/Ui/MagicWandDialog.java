@@ -15,6 +15,7 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.MergeSelectA
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions.SimplifySelectAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoSam;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.SamEncondeAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
@@ -60,15 +61,15 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         initLayer();
         //  buttons
         // mege
-        SideButton mergeGeometry = new SideButton(new MergeSelectAction());
-        SideButton simplifyGeometry = new SideButton(new SimplifySelectAction());
-
-        //  add
-        SideButton addTagButton = new SideButton(new AutoAddTagAction());
+        SideButton mergeGeometry = new SideButton(new MergeSelectAction(""));
+        // simplify
+        SideButton simplifyGeometry = new SideButton(new SimplifySelectAction(""));
+        // sam
+        SideButton autoSamButton = new SideButton(new AutoSam(this));
         // sam
         SideButton samButton = new SideButton(new SamEncondeAction(this));
 
-        createLayout(mainJpanel, true, Arrays.asList(mergeGeometry,simplifyGeometry, addTagButton, samButton));
+        createLayout(mainJpanel, true, Arrays.asList(mergeGeometry, simplifyGeometry,autoSamButton, samButton));
     }
 
     private JPanel buildTolerancePanel() {

@@ -31,8 +31,8 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 public class SimplifySelectAction extends JosmAction implements DataSelectionListener {
 
 
-    public SimplifySelectAction() {
-        super(tr("Simplify way"), "mapmode/magic-wand-simplify", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
+    public SimplifySelectAction(String text) {
+        super(tr(text), "mapmode/magic-wand-simplify", tr("Simplify multiple geometries"), Shortcut.registerShortcut("data:magicwandsimplify", tr("Data: {0}", tr("Simplify multiple geometries")), KeyEvent.VK_4, Shortcut.CTRL), true);
     }
 
     @Override

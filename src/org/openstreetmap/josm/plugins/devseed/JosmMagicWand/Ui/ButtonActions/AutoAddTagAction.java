@@ -11,8 +11,8 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 public class AutoAddTagAction extends JosmAction {
     AtomicBoolean isPerforming = new AtomicBoolean(false);
 
-    public AutoAddTagAction() {
-        super(tr("Add tag"), "dialogs/add", tr("Add a new key/value tag to geometries"),
+    public AutoAddTagAction(String text) {
+        super(tr(text), "dialogs/add", tr("Add a new key/value tag to geometries"),
                 null, false);
     }
 
