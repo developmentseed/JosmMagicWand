@@ -6,9 +6,11 @@ import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.LayerImageValues;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,15 +48,35 @@ public class SamEncondeAction extends JosmAction {
 
             // effect
             setEnabled(false);
-            apiThread(samImage);
+            checkApi(samImage);
 
         } else {
             new Notification(tr("An active layer is needed.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         }
     }
 
-    private void apiThread(SamImage samImage) {
+    private void checkApi(SamImage samImage) {
+        setEnabled(false);
         Thread apiThread = new Thread(() -> {
+            String device = CommonUtils.serverSamLive();
+            SwingUtilities.invokeLater(() -> {
+                if (!device.isEmpty()) {
+                    Logging.info("Server is online: " + device);
+                    apiThreadCreateAoi(samImage);
+                } else {
+                    Logging.error("Server is down");
+                    new Notification(tr("SAM server not reachable.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                }
+                setEnabled(true);
+
+            });
+        });
+        apiThread.start();
+    }
+
+    private void apiThreadCreateAoi(SamImage samImage) {
+        setEnabled(false);
+        Thread aoiThread = new Thread(() -> {
             samImage.setEncodeImage();
             SwingUtilities.invokeLater(() -> {
                 addSamImage(samImage);
@@ -62,7 +84,7 @@ public class SamEncondeAction extends JosmAction {
                 setEnabled(true);
             });
         });
-        apiThread.start();
+        aoiThread.start();
     }
 
     private void addSamImage(SamImage samImage) {

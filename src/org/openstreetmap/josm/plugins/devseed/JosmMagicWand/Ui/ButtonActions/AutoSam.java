@@ -4,7 +4,6 @@ import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
-import org.openstreetmap.josm.gui.io.importexport.OsmExporter;
 import org.openstreetmap.josm.gui.layer.ImageryLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.OsmDataLayer;
@@ -12,12 +11,12 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.LayerImageValues;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
+import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -49,41 +48,58 @@ public class AutoSam extends JosmAction {
             SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(), mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
             // effect
             setEnabled(false);
-            try {
-                apiThreadCreateAoi(samImage);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            checkApi(samImage);
 
         } else {
             new Notification(tr("An Map active layer is needed.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         }
     }
 
-    private void apiThreadCreateAoi(SamImage samImage) throws IOException {
+    private void checkApi(SamImage samImage) {
+        Thread apiThread = new Thread(() -> {
+            String device = CommonUtils.serverSamLive();
+            SwingUtilities.invokeLater(() -> {
+                if (!device.isEmpty()) {
+                    Logging.info("Server is online: " + device);
+                    apiThreadCreateAoi(samImage);
+                } else {
+                    Logging.error("Server is down");
+                    new Notification(tr("SAM server not reachable.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                }
+                setEnabled(true);
+            });
+        });
+        apiThread.start();
+    }
+
+    private void apiThreadCreateAoi(SamImage samImage) {
         OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
 //        if (dataActiveLayer.getAssociatedFile() == null || dataActiveLayer.requiresSaveToFile()) {
 //            new Notification(tr("Save changes to the current Data Layer or associate it with a file.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
 //            setEnabled(true);
 //            return;
 //        }
+        Thread aoiThread = new Thread(() -> {
+            try {
+                new Notification(tr("Creating Aoi...")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
+                samImage.setEncodeImage();
+                new Notification(tr("Automatically segmenting ..")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
+                OsmDataLayer newLayerSam = samImage.autoAnnotateSam();
+                SwingUtilities.invokeLater(() -> {
+                    if (newLayerSam != null) {
+                        addSamImage(samImage);
+                        CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
+                        samImage.updateCacheImage();
+                        setEnabled(true);
+                    }
+                });
+            } catch (Exception e) {
+                Logging.error(e);
+                setEnabled(true);
 
-        Thread apiThread = new Thread(() -> {
-            new Notification(tr("Creating Aoi...")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
-            samImage.setEncodeImage();
-            new Notification(tr("Automatically segmenting ..")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
-            OsmDataLayer newLayerSam = samImage.autoAnnotateSam();
-            SwingUtilities.invokeLater(() -> {
-                if (newLayerSam != null) {
-                    addSamImage(samImage);
-                    CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
-                    samImage.updateCacheImage();
-                    setEnabled(true);
-                }
-            });
+            }
         });
-        setEnabled(true);
-        apiThread.start();
+        aoiThread.start();
     }
 
 

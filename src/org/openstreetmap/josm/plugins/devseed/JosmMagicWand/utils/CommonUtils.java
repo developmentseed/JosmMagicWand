@@ -1,5 +1,10 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.locationtech.jts.algorithm.Angle;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.util.GeometryFixer;
@@ -40,6 +45,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -651,7 +657,7 @@ public class CommonUtils {
 
         // 3. Clonar y copiar las relaciones
         for (Relation relation : geoJsonDataSet.getRelations()) {
-            if ( relation.isUsable()) {
+            if (relation.isUsable()) {
                 cloneRelation(relation, clonedNodesMap, activeDataSet);
             }
         }
@@ -715,6 +721,28 @@ public class CommonUtils {
         activeDataSet.addPrimitive(clonedRelation);
 
         return clonedRelation;
+    }
+
+    public static String serverSamLive() {
+        try {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(2, TimeUnit.SECONDS)
+                    .readTimeout(2, TimeUnit.SECONDS)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(Constants.SAM_API)
+                    .build();
+            Response response = client.newCall(request).execute();
+            String responseData = response.body().string();
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            JsonNode rootNode = objectMapper.readTree(responseData);
+            String device = rootNode.get("device").asText();
+            return device;
+        } catch (Exception e) {
+            Logging.error(e.getMessage());
+            return "";
+        }
     }
 
 }

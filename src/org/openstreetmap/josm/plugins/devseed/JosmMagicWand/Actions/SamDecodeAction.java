@@ -1,10 +1,6 @@
 package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Actions;
 
-import org.locationtech.jts.geom.Geometry;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
-import org.openstreetmap.josm.command.Command;
-import org.openstreetmap.josm.command.SequenceCommand;
-import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
@@ -25,10 +21,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -39,6 +31,7 @@ public class SamDecodeAction extends MapMode implements MouseListener {
     private Point drawStartPos;
     private Point mousePos;
     private final ImageSamPanelListener listener;
+
     public SamDecodeAction(ImageSamPanelListener listener) {
         super(tr("Magic Wand SAM"), "magic-wand-sam", tr("Magic Wand SAM action"), null, ImageProvider.getCursor("crosshair", null));
         this.listener = listener;
@@ -97,54 +90,75 @@ public class SamDecodeAction extends MapMode implements MouseListener {
     }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
+    public void mouseReleased(MouseEvent event) {
         Logging.info("-------- mouseReleased -----------");
-        if (e.getButton() != MouseEvent.BUTTON1) return;
+        if (event.getButton() != MouseEvent.BUTTON1) return;
         if (!MainApplication.getMap().mapView.isActiveLayerDrawable()) return;
 
+        checkApi(event.getX(), event.getY());
+    }
+
+    private void checkApi(int x, int y) {
         Thread apiThread = new Thread(() -> {
-            try {
-                drawWays(e);
-            } catch (Exception ex) {
-                Logging.error(ex);
-                new Notification(tr("Error data generation.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            }
+            String device = CommonUtils.serverSamLive();
             SwingUtilities.invokeLater(() -> {
-                Logging.error("later");
+                if (!device.isEmpty()) {
+                    Logging.info("Server is online: " + device);
+                    apiThreadDecode(x, y);
+                } else {
+                    Logging.error("Server is down");
+                    new Notification(tr("SAM server not reachable.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                }
             });
         });
         apiThread.start();
     }
 
-    private void drawWays(MouseEvent e) throws Exception {
-        OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
+    private void apiThreadDecode(int x, int y) {
+        Thread aoiThread = new Thread(() -> {
+            drawWays(x, y);
+            SwingUtilities.invokeLater(() -> {
+                Logging.error("later");
+            });
+        });
+        aoiThread.start();
+    }
 
-        MapView mapView = MainApplication.getMap().mapView;
-        DataSet ds = MainApplication.getLayerManager().getEditDataSet();
 
-        String tagKey = "";
-        String tagValue = "";
+    private void drawWays(int x, int y) {
+        try {
 
-        LatLon latLon = mapView.getLatLon(e.getX(), e.getY());
-        Projection currentProjection = mapView.getProjection();
-        EastNorth eastNorth = latLon.getEastNorth(currentProjection);
+            OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
 
-        SamImage samImage = listener.getSamImageIncludepoint(eastNorth.getX(), eastNorth.getY());
-        if (samImage == null) {
-            new Notification(tr("Click inside of active AOI to enable Segment Anything Model.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return ;
+            MapView mapView = MainApplication.getMap().mapView;
+            DataSet ds = MainApplication.getLayerManager().getEditDataSet();
+
+            String tagKey = "";
+            String tagValue = "";
+
+            LatLon latLon = mapView.getLatLon(x, y);
+            Projection currentProjection = mapView.getProjection();
+            EastNorth eastNorth = latLon.getEastNorth(currentProjection);
+
+            SamImage samImage = listener.getSamImageIncludepoint(eastNorth.getX(), eastNorth.getY());
+            if (samImage == null) {
+                new Notification(tr("Click inside of active AOI to enable Segment Anything Model.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                return;
+            }
+            Projection epsg4326 = Projections.getProjectionByCode("EPSG:4326");
+            EastNorth eastNort4326 = epsg4326.latlon2eastNorth(latLon);
+
+
+            OsmDataLayer newLayerSam = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
+            if (newLayerSam == null) {
+                new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                return;
+            }
+            CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
+        } catch (Exception e) {
+            Logging.error(e);
+            new Notification(tr("Error data generation.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
         }
-        Projection epsg4326 = Projections.getProjectionByCode("EPSG:4326");
-        EastNorth eastNort4326 = epsg4326.latlon2eastNorth(latLon);
-
-
-        OsmDataLayer newLayerSam = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
-        if (newLayerSam == null) {
-            new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return ;
-        }
-        CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
-
     }
 
     private enum Mode {
