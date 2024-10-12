@@ -117,6 +117,7 @@ public class SamDecodeAction extends MapMode implements MouseListener {
     }
 
     private void drawWays(MouseEvent e) throws Exception {
+        OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
 
         MapView mapView = MainApplication.getMap().mapView;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
@@ -137,11 +138,12 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         EastNorth eastNort4326 = epsg4326.latlon2eastNorth(latLon);
 
 
-        OsmDataLayer samLayer = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
-        if (samLayer == null) {
+        OsmDataLayer newLayerSam = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
+        if (newLayerSam == null) {
             new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
             return ;
         }
+        CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
 
     }
 

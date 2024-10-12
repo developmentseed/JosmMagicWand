@@ -7,17 +7,18 @@ public class EncodeResponse {
     private int zoom;
     private String imageUrl;
     private String tifUrl;
-
+    private String return_format;
     public EncodeResponse() {
     }
 
-    public EncodeResponse(String project, String id, double[] bbox, int zoom, String imageUrl, String tifUrl) {
+    public EncodeResponse(String project, String id, double[] bbox, int zoom, String imageUrl, String tifUrl, String return_format) {
         this.project = project;
         this.id = id;
         this.bbox = bbox;
         this.zoom = zoom;
         this.imageUrl = imageUrl;
         this.tifUrl = tifUrl;
+        this.return_format = return_format ;
     }
 
     // Getters y Setters
@@ -67,6 +68,14 @@ public class EncodeResponse {
 
     public void setTifUrl(String tifUrl) {
         this.tifUrl = tifUrl;
+    }
+
+    public String getReturn_format() {
+        return return_format;
+    }
+
+    public void setReturn_format(String return_format) {
+        this.return_format = return_format;
     }
 }
 

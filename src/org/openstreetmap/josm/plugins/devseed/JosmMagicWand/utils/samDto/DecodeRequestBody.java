@@ -11,6 +11,7 @@ public class DecodeRequestBody {
     private List<Integer> point_labels;
     private String project;
     private Integer zoom;
+    private String return_format;
 
     public DecodeRequestBody(String action_type, List<Double> bbox, String id, List<List<Double>> point_coords, List<Integer> point_labels, String project, Integer zoom) {
         this.action_type = action_type;
@@ -21,6 +22,8 @@ public class DecodeRequestBody {
         this.point_labels = point_labels;
         this.project = project;
         this.zoom = zoom;
+        this.return_format = "geojson";
+
     }
 
     @Override
@@ -99,5 +102,13 @@ public class DecodeRequestBody {
 
     public void setZoom(Integer zoom) {
         this.zoom = zoom;
+    }
+
+    public String getReturn_format() {
+        return return_format;
+    }
+
+    public void setReturn_format(String return_format) {
+        this.return_format = return_format;
     }
 }

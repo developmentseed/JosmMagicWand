@@ -275,7 +275,7 @@ public class SamImage {
 
             Response response = client.newCall(request).execute();
             String responseData = response.body().string();
-            String filename = "magic_wand_sam_api"+ "__" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
+            String filename = "mw_sam__" + CommonUtils.getDateTime() + "__" + getId() + ".geojson";
 
             File tempFile = new File(new File(CommonUtils.magicWandCacheSamDirPath()), filename);
             try (FileWriter fileWriter = new FileWriter(tempFile)) {
@@ -295,7 +295,7 @@ public class SamImage {
         CommonUtils.createCacheSamDir();
         if (getEncode() && !getImageUrl().isEmpty()) {
             try {
-                String filename = "magic_wand_sam_api"+ "__" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
+                String filename = "mw_sam__" + CommonUtils.getDateTime() + "__" + getId() + ".geojson";
                 // request body
                 EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
                 String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
