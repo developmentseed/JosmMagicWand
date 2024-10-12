@@ -14,6 +14,7 @@ import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.MapView;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.CommonUtils;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
@@ -115,7 +116,7 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         apiThread.start();
     }
 
-    private boolean drawWays(MouseEvent e) throws Exception {
+    private void drawWays(MouseEvent e) throws Exception {
 
         MapView mapView = MainApplication.getMap().mapView;
         DataSet ds = MainApplication.getLayerManager().getEditDataSet();
@@ -130,39 +131,25 @@ public class SamDecodeAction extends MapMode implements MouseListener {
         SamImage samImage = listener.getSamImageIncludepoint(eastNorth.getX(), eastNorth.getY());
         if (samImage == null) {
             new Notification(tr("Click inside of active AOI to enable Segment Anything Model.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return false;
+            return ;
         }
         Projection epsg4326 = Projections.getProjectionByCode("EPSG:4326");
         EastNorth eastNort4326 = epsg4326.latlon2eastNorth(latLon);
 
 
-        List<Geometry> geometrySamList = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
-        if (geometrySamList.isEmpty()) {
+        OsmDataLayer samLayer = samImage.fetchDecodePoint(eastNort4326.getX(), eastNort4326.getY());
+        if (samLayer == null) {
             new Notification(tr("Error fetch data.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
-            return false;
+            return ;
         }
-        // 4326
-        List<Geometry> geometriesMercator = new ArrayList<>();
-
-        for (Geometry samGeometry : geometrySamList) {
-            var nodesMercator = CommonUtils.coordinates2Nodes(Arrays.asList(samGeometry.getCoordinates()), epsg4326);
-            var coordMercator = CommonUtils.nodes2Coordinates(nodesMercator);
-            var geometry = CommonUtils.coordinates2Polygon(coordMercator);
-            var geometrySimPolygonHull = CommonUtils.simplifyPolygonHull(geometry.copy(), 0.95);
-            geometriesMercator.add(geometrySimPolygonHull);
-        }
-
-
-        Collection<Command> cmds = CommonUtils.geometry2WayCommands(ds, geometriesMercator, tagKey, tagValue);
-
-        UndoRedoHandler.getInstance().add(new SequenceCommand(tr("generate sam ways"), cmds));
-        return !cmds.isEmpty();
 
     }
 
     private enum Mode {
         None, Drawing
     }
+
+
 }
 
 

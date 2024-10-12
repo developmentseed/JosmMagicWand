@@ -61,7 +61,7 @@ public class AutoSam extends JosmAction {
     }
 
     private void apiThreadCreateAoi(SamImage samImage) throws IOException {
-//        OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
+        OsmDataLayer dataActiveLayer = CommonUtils.getActiveDataLayerNameOrCreate("Data Layer new");
 //        if (dataActiveLayer.getAssociatedFile() == null || dataActiveLayer.requiresSaveToFile()) {
 //            new Notification(tr("Save changes to the current Data Layer or associate it with a file.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
 //            setEnabled(true);
@@ -69,17 +69,20 @@ public class AutoSam extends JosmAction {
 //        }
 
         Thread apiThread = new Thread(() -> {
+            new Notification(tr("Creating Aoi...")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
             samImage.setEncodeImage();
+            new Notification(tr("Automatically segmenting ..")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
             OsmDataLayer newLayerSam = samImage.autoAnnotateSam();
             SwingUtilities.invokeLater(() -> {
                 if (newLayerSam != null) {
                     addSamImage(samImage);
-//                    CommonUtils.mergeLayersByName(dataActiveLayer, newLayerSam, dataActiveLayer.getName());
+                    CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
                     samImage.updateCacheImage();
                     setEnabled(true);
                 }
             });
         });
+        setEnabled(true);
         apiThread.start();
     }
 

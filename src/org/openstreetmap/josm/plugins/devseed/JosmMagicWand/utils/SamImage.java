@@ -3,12 +3,13 @@ package org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import okhttp3.*;
-import org.locationtech.jts.geom.*;
-import org.locationtech.jts.io.geojson.GeoJsonReader;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.openstreetmap.josm.data.ProjectionBounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
@@ -32,7 +33,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @JsonRootName(value = "SamImage")
@@ -134,8 +138,8 @@ public class SamImage {
         this.setLayerName(layerName);
         // api client
         client = new OkHttpClient.Builder()
-                .connectTimeout(45, TimeUnit.SECONDS)
-                .readTimeout(40, TimeUnit.SECONDS)
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
                 .build();
         objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
@@ -187,8 +191,8 @@ public class SamImage {
         this.setBboxWay(createBboxWay());
         //  fetch data
         client = new OkHttpClient.Builder()
-                .connectTimeout(45, TimeUnit.SECONDS)
-                .readTimeout(40, TimeUnit.SECONDS)
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
                 .build();
         objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
@@ -256,11 +260,8 @@ public class SamImage {
 
     }
 
-    public List<Geometry> fetchDecodePoint(Double x, Double y) {
-        List<Geometry> geometryList = new ArrayList<>();
-        GeoJsonReader geoJsonReader = new GeoJsonReader();
+    public OsmDataLayer fetchDecodePoint(Double x, Double y) {
         try {
-
             // request body
             DecodeRequestBody decodeRequestBody = new DecodeRequestBody("single_point", getBbox4326(), getId(), List.of(Arrays.asList(x, y)), List.of(1), getProjectName(), 12);
 
@@ -273,40 +274,28 @@ public class SamImage {
                     .build();
 
             Response response = client.newCall(request).execute();
-            if (response.isSuccessful()) {
-                String responseData = response.body().string();
+            String responseData = response.body().string();
+            String filename = "magic_wand_sam_api"+ "__" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
 
-                JsonNode rootNode = objectMapper.readTree(responseData);
-
-                if (rootNode.has("type") && "FeatureCollection".equals(rootNode.get("type").asText())) {
-                    JsonNode featuresArray = rootNode.get("features");
-                    Iterator<JsonNode> featuresIterator = featuresArray.elements();
-
-                    while (featuresIterator.hasNext()) {
-                        JsonNode feature = featuresIterator.next();
-                        Geometry geometry = geoJsonReader.read(feature.get("geometry").toString());
-                        if (geometry != null && geometry.getNumPoints() >= 7) {
-                            geometryList.add(geometry);
-                        }
-                    }
-                } else {
-                    Logging.error("The GeoJSON  has not FeatureCollection");
-                }
-            } else {
-                Logging.error(response.body().string());
+            File tempFile = new File(new File(CommonUtils.magicWandCacheSamDirPath()), filename);
+            try (FileWriter fileWriter = new FileWriter(tempFile)) {
+                fileWriter.write(responseData);
             }
+            Logging.info("GeoJSON save in: " + tempFile.getAbsolutePath());
+            // load layer
+            return loadGeoJsonAsLayer(tempFile);
 
         } catch (Exception e) {
             Logging.error(e.toString());
         }
-        return geometryList;
+        return null;
     }
 
     public OsmDataLayer autoAnnotateSam() {
         CommonUtils.createCacheSamDir();
         if (getEncode() && !getImageUrl().isEmpty()) {
             try {
-                String filename = "magic_wand_sam_api" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
+                String filename = "magic_wand_sam_api"+ "__" + getId() + "__" + CommonUtils.getDateTime() + ".geojson";
                 // request body
                 EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
                 String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);

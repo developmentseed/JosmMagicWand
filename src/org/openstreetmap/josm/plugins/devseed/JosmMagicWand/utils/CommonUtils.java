@@ -16,10 +16,7 @@ import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.TagMap;
-import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.osm.*;
 import org.openstreetmap.josm.data.preferences.JosmBaseDirectories;
 import org.openstreetmap.josm.data.projection.Projection;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
@@ -504,6 +501,7 @@ public class CommonUtils {
 
         return josmCacheDataDir + File.separator + "magicwand";
     }
+
     public static String magicWandCacheSamDirPath() {
         String josmCacheDataDir = JosmBaseDirectories.getInstance().getCacheDirectory(true).toString();
 
@@ -590,6 +588,7 @@ public class CommonUtils {
         DataSet dataSet = new DataSet();
         return new OsmDataLayer(dataSet, layerName, null);
     }
+
     public static OsmDataLayer getActiveDataLayerNameOrCreate(String layerName) {
         OsmDataLayer activeLayer = MainApplication.getLayerManager().getActiveDataLayer();
 
@@ -597,7 +596,7 @@ public class CommonUtils {
             return activeLayer;
         }
         for (OsmDataLayer layer : MainApplication.getLayerManager().getLayersOfType(OsmDataLayer.class)) {
-            if ( layer.isVisible() && layer.isModified()) {
+            if (layer.isVisible() && layer.isModified()) {
                 return layer;
             }
         }
@@ -607,6 +606,7 @@ public class CommonUtils {
         MainApplication.getLayerManager().setActiveLayer(newLayer);
         return newLayer;
     }
+
     public static void mergeLayersByName(OsmDataLayer currentLayer, OsmDataLayer newLayer, String newLayerName) {
         LayerManager layerManager = MainApplication.getLayerManager();
 
@@ -623,6 +623,98 @@ public class CommonUtils {
         mergeLayerAction.merge(layers);
         currentLayer.setName(newLayerName);
         MainApplication.getLayerManager().removeLayer(newLayer);
+    }
+
+    public static void pasteDataFromLayerByName(OsmDataLayer currentLayer, OsmDataLayer newLayer) {
+
+        DataSet activeDataSet = currentLayer.getDataSet();
+        DataSet geoJsonDataSet = newLayer.getDataSet();
+
+        if (geoJsonDataSet == null || activeDataSet == null) {
+            new Notification(tr("Data in one or both layers could not be accessed.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+            return;
+        }
+        // copy data
+        Map<PrimitiveId, Node> clonedNodesMap = new HashMap<>();
+
+        for (Node node : geoJsonDataSet.getNodes()) {
+            if (node.isUsable()) {
+                cloneNode(node, clonedNodesMap, activeDataSet);
+            }
+        }
+
+        for (Way way : geoJsonDataSet.getWays()) {
+            if (way.isUsable()) {
+                cloneWay(way, clonedNodesMap, activeDataSet);
+            }
+        }
+
+        // 3. Clonar y copiar las relaciones
+        for (Relation relation : geoJsonDataSet.getRelations()) {
+            if ( relation.isUsable()) {
+                cloneRelation(relation, clonedNodesMap, activeDataSet);
+            }
+        }
+        MainApplication.getLayerManager().removeLayer(newLayer);
+    }
+
+
+    private static Node cloneNode(Node node, Map<PrimitiveId, Node> clonedNodesMap, DataSet activeDataSet) {
+        if (clonedNodesMap.containsKey(node.getPrimitiveId())) {
+            return clonedNodesMap.get(node.getPrimitiveId());
+        }
+
+        if (activeDataSet.containsNode(node)) {
+            Logging.warn("Node " + node.getPrimitiveId() + " already exists");
+            return (Node) activeDataSet.getPrimitiveById(node.getPrimitiveId());
+        }
+        // clone
+        Node clonedNode = new Node(node.getCoor());
+        clonedNode.setKeys(node.getKeys());
+
+        if (activeDataSet.containsNode(clonedNode)) {
+            Logging.warn("Node " + node.getPrimitiveId() + " already exists");
+            return clonedNode;
+        }
+        activeDataSet.addPrimitive(clonedNode);
+        clonedNodesMap.put(node.getPrimitiveId(), clonedNode);
+
+        return clonedNode;
+    }
+
+    private static Way cloneWay(Way way, Map<PrimitiveId, Node> clonedNodesMap, DataSet activeDataSet) {
+        Way clonedWay = new Way();
+        for (Node node : way.getNodes()) {
+            Node clonedNode = cloneNode(node, clonedNodesMap, activeDataSet);
+            clonedWay.addNode(clonedNode);
+        }
+        clonedWay.setKeys(way.getKeys());
+        activeDataSet.addPrimitive(clonedWay);
+        return clonedWay;
+    }
+
+    private static Relation cloneRelation(Relation relation, Map<PrimitiveId, Node> clonedNodesMap, DataSet activeDataSet) {
+        Relation clonedRelation = new Relation();
+
+        for (RelationMember member : relation.getMembers()) {
+            OsmPrimitive memberPrimitive = member.getMember();
+
+            if (memberPrimitive instanceof Node) {
+                Node clonedNode = cloneNode((Node) memberPrimitive, clonedNodesMap, activeDataSet);
+                clonedRelation.addMember(new RelationMember(member.getRole(), clonedNode));
+            } else if (memberPrimitive instanceof Way) {
+                Way clonedWay = cloneWay((Way) memberPrimitive, clonedNodesMap, activeDataSet);
+                clonedRelation.addMember(new RelationMember(member.getRole(), clonedWay));
+            } else if (memberPrimitive instanceof Relation) {
+                Relation clonedSubRelation = cloneRelation((Relation) memberPrimitive, clonedNodesMap, activeDataSet);
+                clonedRelation.addMember(new RelationMember(member.getRole(), clonedSubRelation));
+            }
+        }
+
+        clonedRelation.setKeys(relation.getKeys());
+        activeDataSet.addPrimitive(clonedRelation);
+
+        return clonedRelation;
     }
 
 }
