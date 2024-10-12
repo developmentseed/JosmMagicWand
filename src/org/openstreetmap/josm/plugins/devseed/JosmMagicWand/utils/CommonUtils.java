@@ -655,7 +655,7 @@ public class CommonUtils {
             }
         }
 
-        // 3. Clonar y copiar las relaciones
+        //
         for (Relation relation : geoJsonDataSet.getRelations()) {
             if (relation.isUsable()) {
                 cloneRelation(relation, clonedNodesMap, activeDataSet);

@@ -24,8 +24,7 @@ public class SamEncondeAction extends JosmAction {
     private final ImageSamPanelListener listener;
 
     public SamEncondeAction(ImageSamPanelListener listener) {
-        super(tr("SAM AOI"), "dialogs/magic-wand-encode", tr("Add a new SAM AOI"),
-                null, false);
+        super(tr("SAM AOI"), "dialogs/magic-wand-encode", tr("Add a new SAM AOI"), null, false);
         this.listener = listener;
     }
 

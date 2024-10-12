@@ -76,7 +76,7 @@ public class ImagePanel extends JPanel {
     }
 
     private void setupButtons() {
-        // Creamos los botones
+        //
         ImageIcon zoomIco = new ImageProvider("dialogs", "zoom-best-fit").get();
         ImageIcon deleteIco = new ImageProvider("dialogs", "delete").get();
 

@@ -8,6 +8,7 @@ public class EncodeResponse {
     private String imageUrl;
     private String tifUrl;
     private String return_format;
+
     public EncodeResponse() {
     }
 
@@ -18,7 +19,7 @@ public class EncodeResponse {
         this.zoom = zoom;
         this.imageUrl = imageUrl;
         this.tifUrl = tifUrl;
-        this.return_format = return_format ;
+        this.return_format = return_format;
     }
 
     // Getters y Setters

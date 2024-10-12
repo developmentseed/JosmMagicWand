@@ -7,9 +7,9 @@ import org.openstreetmap.josm.tools.Logging;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -47,6 +47,7 @@ public class SamImageGrid extends JPanel implements ImagePanelListener {
             }
         }
     }
+
     public void addSamImage(SamImage samImage) {
         if (samImage.getEncode() && !samImage.getImageUrl().isEmpty()) {
             samImageList.add(0, samImage);
