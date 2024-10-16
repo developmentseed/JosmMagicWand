@@ -47,7 +47,6 @@ public class AutoSam extends JosmAction {
             LayerImageValues layerImageValues = getLayeredImage(mapView);
             SamImage samImage = new SamImage(mapView.getProjectionBounds(), mapView.getProjection(), mapView.getScale(), layerImageValues.getBufferedImage(), layerImageValues.getLayerName());
             // effect
-            setEnabled(false);
             checkApi(samImage);
 
         } else {
@@ -66,7 +65,6 @@ public class AutoSam extends JosmAction {
                     Logging.error("Server is down");
                     new Notification(tr("SAM server not reachable.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
                 }
-                setEnabled(true);
             });
         });
         apiThread.start();
@@ -79,24 +77,26 @@ public class AutoSam extends JosmAction {
 //            setEnabled(true);
 //            return;
 //        }
+        setEnabled(false);
         Thread aoiThread = new Thread(() -> {
             try {
-                new Notification(tr("Creating Aoi...")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
+                new Notification(tr("Creating Aoi...")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
                 samImage.setEncodeImage();
-                new Notification(tr("Automatically segmenting ..")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_LONG).show();
+                new Notification(tr("Automatically segmenting ..")).setIcon(JOptionPane.INFORMATION_MESSAGE).setDuration(Notification.TIME_SHORT).show();
+                setEnabled(false);
                 OsmDataLayer newLayerSam = samImage.autoAnnotateSam();
+                setEnabled(false);
                 SwingUtilities.invokeLater(() -> {
                     if (newLayerSam != null) {
                         addSamImage(samImage);
                         CommonUtils.pasteDataFromLayerByName(dataActiveLayer, newLayerSam);
                         samImage.updateCacheImage();
-                        setEnabled(true);
                     }
+                    setEnabled(true);
                 });
             } catch (Exception e) {
                 Logging.error(e);
                 setEnabled(true);
-
             }
         });
         aoiThread.start();

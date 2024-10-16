@@ -519,17 +519,21 @@ public class CommonUtils {
     }
 
     private static void createDir(String path) {
-        File magicWandDir = new File(path);
-        if (!magicWandDir.exists()) {
-            boolean wasDirectoryCreated = magicWandDir.mkdir();
+        try {
+            File magicWandDir = new File(path);
+            if (!magicWandDir.exists()) {
+                boolean wasDirectoryCreated = magicWandDir.mkdir();
 
-            if (wasDirectoryCreated) {
-                Logging.info(tr("magicwand " + "Folder 'magicwand' successfully created at: " + path));
+                if (wasDirectoryCreated) {
+                    Logging.info(tr("magicwand " + "Folder 'magicwand' successfully created at: " + path));
+                } else {
+                    Logging.info(tr("magicwand " + "Failed to create the 'magicwand' folder at: " + path));
+                }
             } else {
-                Logging.info(tr("magicwand " + "Failed to create the 'magicwand' folder at: " + path));
+                Logging.info(tr("magicwand " + "The 'magicwand' folder already exists at: " + path));
             }
-        } else {
-            Logging.info(tr("magicwand " + "The 'magicwand' folder already exists at: " + path));
+        } catch (Exception e) {
+            Logging.error(e);
         }
     }
 

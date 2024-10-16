@@ -55,7 +55,6 @@ public class SamEncondeAction extends JosmAction {
     }
 
     private void checkApi(SamImage samImage) {
-        setEnabled(false);
         Thread apiThread = new Thread(() -> {
             String device = CommonUtils.serverSamLive();
             SwingUtilities.invokeLater(() -> {
@@ -66,8 +65,6 @@ public class SamEncondeAction extends JosmAction {
                     Logging.error("Server is down");
                     new Notification(tr("SAM server not reachable.")).setIcon(JOptionPane.ERROR_MESSAGE).setDuration(Notification.TIME_SHORT).show();
                 }
-                setEnabled(true);
-
             });
         });
         apiThread.start();

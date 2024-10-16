@@ -41,6 +41,8 @@ public class MainJosmMagicWandPlugin extends Plugin {
 
         // create a folder
         CommonUtils.createCacheDir();
+        CommonUtils.createCacheSamDir();
+
     }
 
     @Override
