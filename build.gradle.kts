@@ -58,7 +58,7 @@ josm {
     manifest {
         description = "JOSM plugin for select areas by color range."
         mainClass = "org.openstreetmap.josm.plugins.devseed.JosmMagicWand.MainJosmMagicWandPlugin"
-        minJosmVersion = "19096"
+        minJosmVersion = "19067"
         author = "yunica"
         canLoadAtRuntime = true
         iconPath = "images/dialogs/magicwand.svg"
