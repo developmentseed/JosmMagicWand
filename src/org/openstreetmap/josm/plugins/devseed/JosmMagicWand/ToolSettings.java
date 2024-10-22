@@ -20,6 +20,9 @@ public final class ToolSettings {
     // tags
     private static String autoTags;
     // sam images
+    private static int simplAreaSam;
+    private static double simplDistanceSam;
+
     private static List<SamImage> samImagesList = new ArrayList<>();
     private ToolSettings() {
     }
@@ -119,5 +122,21 @@ public final class ToolSettings {
 
     public static void setAutoTags(String autoTags) {
         ToolSettings.autoTags = autoTags;
+    }
+
+    public static int getSimplAreaSam() {
+        return simplAreaSam;
+    }
+
+    public static void setSimplAreaSam(int simplAreaSam) {
+        ToolSettings.simplAreaSam = simplAreaSam;
+    }
+
+    public static double getSimplDistanceSam() {
+        return simplDistanceSam;
+    }
+
+    public static void setSimplDistanceSam(double simplDistanceSam) {
+        ToolSettings.simplDistanceSam = simplDistanceSam;
     }
 }

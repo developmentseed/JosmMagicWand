@@ -12,6 +12,8 @@ public class DecodeRequestBody {
     private String project;
     private Integer zoom;
     private String return_format;
+    private double simplify_tolerance;
+    private int area_val;
 
     public DecodeRequestBody(String action_type, List<Double> bbox, String id, List<List<Double>> point_coords, List<Integer> point_labels, String project, Integer zoom) {
         this.action_type = action_type;
@@ -23,7 +25,8 @@ public class DecodeRequestBody {
         this.project = project;
         this.zoom = zoom;
         this.return_format = "geojson";
-
+        this.simplify_tolerance = 0.000002;
+        this.area_val = 15;
     }
 
     @Override
@@ -110,5 +113,21 @@ public class DecodeRequestBody {
 
     public void setReturn_format(String return_format) {
         this.return_format = return_format;
+    }
+
+    public int getArea_val() {
+        return area_val;
+    }
+
+    public void setArea_val(int area_val) {
+        this.area_val = area_val;
+    }
+
+    public double getSimplify_tolerance() {
+        return simplify_tolerance;
+    }
+
+    public void setSimplify_tolerance(double simplify_tolerance) {
+        this.simplify_tolerance = simplify_tolerance;
     }
 }

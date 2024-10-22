@@ -23,6 +23,7 @@ import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.progress.NullProgressMonitor;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.GeoJSONReader;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.DecodeRequestBody;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncodeResponse;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.samDto.EncondeRequestBody;
@@ -235,7 +236,7 @@ public class SamImage {
     public void setEncodeImage() {
         try {
             // request body
-            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
+            EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId(), ToolSettings.getSimplAreaSam(), ToolSettings.getSimplDistanceSam());
             String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
             RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 
@@ -297,7 +298,7 @@ public class SamImage {
             try {
                 String filename = "mw_sam__" + CommonUtils.getDateTime() + "__" + getId() + ".geojson";
                 // request body
-                EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId());
+                EncondeRequestBody encodeRequestBody = new EncondeRequestBody(getCanvasImage(), getProjectName(), 12, getBbox4326(), getId(), ToolSettings.getSimplAreaSam(), ToolSettings.getSimplDistanceSam());
                 String requestBodyJson = objectMapper.writeValueAsString(encodeRequestBody);
                 RequestBody requestBody = RequestBody.create(JSON, requestBodyJson);
 

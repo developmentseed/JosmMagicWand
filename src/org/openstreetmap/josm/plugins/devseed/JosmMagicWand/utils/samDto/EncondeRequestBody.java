@@ -10,8 +10,10 @@ public class EncondeRequestBody {
     private Integer zoom;
     private List<Double> bbox;
     private String return_format;
+    private double simplify_tolerance;
+    private int area_val;
 
-    public EncondeRequestBody(String canvas_image, String project, Integer zoom, List<Double> bbox, String id) {
+    public EncondeRequestBody(String canvas_image, String project, Integer zoom, List<Double> bbox, String id, int area_val, double simplify_tolerance) {
         this.canvas_image = canvas_image;
         this.crs = "EPSG:4326";
         this.id = id;
@@ -19,6 +21,9 @@ public class EncondeRequestBody {
         this.zoom = zoom;
         this.bbox = bbox;
         this.return_format = "geojson";
+        this.area_val = area_val;
+        this.simplify_tolerance = simplify_tolerance;
+
     }
 
     @Override
@@ -87,5 +92,21 @@ public class EncondeRequestBody {
 
     public void setReturn_format(String return_format) {
         this.return_format = return_format;
+    }
+
+    public int getArea_val() {
+        return area_val;
+    }
+
+    public void setArea_val(int area_val) {
+        this.area_val = area_val;
+    }
+
+    public double getSimplify_tolerance() {
+        return simplify_tolerance;
+    }
+
+    public void setSimplify_tolerance(double simplify_tolerance) {
+        this.simplify_tolerance = simplify_tolerance;
     }
 }

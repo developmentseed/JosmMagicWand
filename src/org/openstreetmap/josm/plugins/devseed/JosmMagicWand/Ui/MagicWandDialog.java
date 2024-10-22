@@ -17,16 +17,18 @@ import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.ToolSettings;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoAddTagAction;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.AutoSam;
 import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.Ui.ButtonActions.SamEncondeAction;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.ImageSamPanelListener;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImage;
-import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.SamImageGrid;
+import org.openstreetmap.josm.plugins.devseed.JosmMagicWand.utils.*;
 import org.openstreetmap.josm.tools.Logging;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EventListener;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -44,7 +46,7 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         mainJpanel.setLayout(new BoxLayout(mainJpanel, BoxLayout.Y_AXIS));
 
         JPanel optionPanel = new JPanel();
-        optionPanel.setLayout(new GridLayout(5, 1, 3, 3));
+        optionPanel.setLayout(new GridLayout(6, 1, 3, 3));
         // tolerance
         optionPanel.add(buildTolerancePanel());
         // simplify
@@ -52,10 +54,10 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
         optionPanel.add(buildDouglaspPanel());
         optionPanel.add(buildTopologyPreservingPanel());
         optionPanel.add(buildChaikinAnglePanel());
+        optionPanel.add(buildSamParams());
         // add mainJpanel
         mainJpanel.add(optionPanel);
         // sam image
-
         mainJpanel.add(buildSamImagesPanel());
         // layer
         initLayer();
@@ -190,7 +192,6 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
             jpanel.repaint();
         });
 
-
         return jpanel;
     }
 
@@ -222,6 +223,51 @@ public class MagicWandDialog extends ToggleDialog implements ImageSamPanelListen
             jpanel.repaint();
         });
 
+
+        return jpanel;
+    }
+
+    private JPanel buildSamParams() {
+        JPanel jpanel = new JPanel();
+        jpanel.setLayout(new GridLayout(1, 2, 3, 3));
+        //
+        int initArea = 10;
+        double initThreshold = 0.000002;
+        //
+        ToolSettings.setSimplAreaSam(initArea);
+        ToolSettings.setSimplDistanceSam(initThreshold);
+
+        //
+        NumericField jTextInputArea = new NumericField(false);
+        NumericField jTextInputThreshold = new NumericField(true);
+        // colors
+        jTextInputArea.setBorder(new TitledBorder("Min area simplify"));
+        jTextInputThreshold.setBorder(new TitledBorder("Min distance simplify"));
+        //
+        jTextInputArea.setText(String.format("%d", initArea));
+        jTextInputThreshold.setText(String.format("%.8f", initThreshold));
+        //
+
+        jTextInputArea.addPropertyChangeListener("text", e -> {
+            try {
+                double doubleValue = Double.parseDouble((String) e.getNewValue());
+                ToolSettings.setSimplAreaSam((int) doubleValue);
+            } catch (Exception ex) {
+                Logging.error(ex.getMessage());
+            }
+        });
+        jTextInputThreshold.addPropertyChangeListener("text", e -> {
+            try {
+                double doubleValue = Double.parseDouble((String) e.getNewValue());
+                ToolSettings.setSimplDistanceSam(doubleValue);
+            } catch (Exception ex) {
+                Logging.error(ex.getMessage());
+            }
+        });
+
+        // add
+        jpanel.add(jTextInputArea);
+        jpanel.add(jTextInputThreshold);
 
         return jpanel;
     }
